@@ -1,6 +1,11 @@
 from functools import reduce
-from itertools import izip_longest
 from operator import getitem
+try:
+    # Python 3
+    from itertools import zip_longest
+except ImportError:
+    # Python 2
+    from itertools import izip_longest as zip_longest
 
 
 class Storage(object):
