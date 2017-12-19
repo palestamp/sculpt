@@ -36,5 +36,5 @@ class TestValidation(unittest.TestCase):
 
         executor.run(context)
         expect = "input:age field does not belong to requested values"
-        self.assertEqual(expect, context.errors[0].message)
+        self.assertEqual(expect, str(context.errors[0]))
 

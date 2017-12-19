@@ -35,7 +35,7 @@ class Input(Storage):
     def has(self, context):
         return nested_has(context.cursors[self.section], split_label(self.label))
 
-    def set(self, _context, _value): # pylint: disable=no-self-use
+    def set(self, _context, _value):  # pylint: disable=no-self-use
         raise ValueError("set operation not allowed on Input")
 
 
@@ -53,16 +53,112 @@ class Output(Storage):
                    split_label(self.label), value)
 
 
+class Virtual(Storage):
+    section = "virtual"
+
+
+class VirtualVar(Virtual):
+    section = "virtual"
+
+    def get(self, context):
+        return context.stores[self.section].get(self.label)
+
+    def has(self, context):
+        return self.label in context.stores[self.section]
+
+    def set(self, context, value):
+        # virtual vars have plain namespace, so we will just
+        # hit storage
+        context.stores[self.section][self.label] = value
+
+
+class VirtualList(Virtual):
+    context_section = "virtual"
+
+    def __init__(self, label, _op="set"):
+        self.label = label
+        self._op = _op
+        self.cbs = []
+
+    def get(self, context):
+        val = context.stores[self.section].get(self.label, [])
+        for cb in self.cbs:
+            val = cb(val)
+        return val
+
+    def has(self, context):
+        return self.label in context.stores[self.section]
+
+    def set(self, ctx, val):
+        if self._op == "set":
+            self._assign_set(ctx, val)
+        elif self._op == "append":
+            self._assign_append(ctx, val)
+        elif self._op == "extend":
+            self._assign_extend(ctx, val)
+
+    def append(self):
+        return self.__class__(self.label, _op="append")
+
+    def extend(self):
+        return self.__class__(self.label, _op="extend")
+
+    def map(self, cb):
+        def _map(_list):
+            return list(map(cb, _list))
+        self.cbs.append(_map)
+        return self
+
+    def find(self, cb):
+        def _find(_list):
+            for item in _list:
+                if cb(item):
+                    return item
+            return None
+
+        self.cbs.append(_find)
+        return self
+
+    def _assign_set(self, context, value):
+        if not isinstance(value, list):
+            raise TypeError("expected list, got %s" % type(value))
+
+        context.stores[self.section][self.label] = value
+
+    def _assign_append(self, context, value):
+        current = self.get(context)
+        if isinstance(current, list):
+            current.append(value)
+        else:
+            current = [value]
+
+        self._assign_set(context, current)
+
+    def _assign_extend(self, context, value):
+        current = self.get(context)
+        if not isinstance(value, list):
+            raise TypeError("expected list, got %s" % type(value))
+
+        if isinstance(current, list):
+            current.extend(value)
+        else:
+            current = [value]
+
+        self._assign_set(context, current)
+
+
 class Context(object):
     def __init__(self, _input):
         self.stores = {
             Input.section: _input,
-            Output.section: {}
+            Output.section: {},
+            Virtual.section: {},
         }
 
         self.cursors = {
             Input.section: self.stores[Input.section],
-            Output.section: self.stores[Output.section]
+            Output.section: self.stores[Output.section],
+            Virtual.section: self.stores[Virtual.section],
         }
 
         self.errors = []
@@ -72,6 +168,11 @@ class Copy(object):
     def __init__(self, left, right):
         self.left = left
         self.right = right
+
+        # static check for Input assignment
+        if isinstance(self.right, Input):
+            # just trigger Input.set which should raise
+            self.right.set(None, None)
 
     def run(self, context):
         value = self.left.get(context)
@@ -176,7 +277,7 @@ class Switch(object):
         return []
 
     def merge(self, other):
-        all_eq = all(a == b for a, b in izip_longest(
+        all_eq = all(a == b for a, b in zip_longest(
             self.fields, other.fields))
 
         if not all_eq:

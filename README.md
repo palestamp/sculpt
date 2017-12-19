@@ -6,8 +6,8 @@
 # TODO
 
 - [X] Field switch
-- [ ] InValidator
-- [ ] VirtualVar + VirtualList
+- [X] InValidator
+- [X] VirtualVar + VirtualList
 - [ ] Combine action
 - [ ] YML rules definition
 - [ ] inplace object unwrap: `[{"name": "python"}, {"name": "go"}]` -> `["python", "go"]`

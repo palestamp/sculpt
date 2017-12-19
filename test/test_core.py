@@ -24,7 +24,7 @@ class TestCopy(unittest.TestCase):
             'name_1': 'Aaron',
             'name': 'Aaron',
             'personality': {
-                    'name': 'Aaron'
+                'name': 'Aaron'
             }
         }
 
@@ -51,6 +51,18 @@ class TestCopy(unittest.TestCase):
         }
         self.assertDictEqual(output, context.stores[Output.section])
 
+    def test_input_raises_on_assing_at_nit_time(self):
+        context = Context({
+            "person": {
+                "name": "Aaron"
+            }
+        })
+
+        with self.assertRaisesRegex(ValueError, "set operation not allowed on Input"):
+            Executor([
+                Copy(Input("age"), Input("age_2")),
+            ])
+
 
 class TestModifiers(unittest.TestCase):
     def test_each(self):
@@ -68,7 +80,8 @@ class TestModifiers(unittest.TestCase):
             Each(Input("items"), Output("counts"), [
                 Copy(Input("year"), Output("y")),
                 Copy(Input("count"), Output("c")),
-                Copy(Output("c"), Output("signed.count"))
+                Copy(Output("c"), Output("signed.count")),
+                Copy(Output("c"), VirtualList("avg.count").append())
             ])
         ])
 
@@ -90,6 +103,10 @@ class TestModifiers(unittest.TestCase):
             }]
         }
 
+        virtual = {
+            'avg.count': [145, 178]
+        }
+        self.assertDictEqual(virtual, context.stores[Virtual.section])
         self.assertDictEqual(output, context.stores[Output.section])
 
     def test_with(self):
@@ -112,7 +129,7 @@ class TestModifiers(unittest.TestCase):
                 Each(Input("items"), Output("counts"), [
                     Copy(Input("year"), Output("y")),
                     Copy(Input("count"), Output("c")),
-                    Copy(Output("c"), Output("signed.count"))
+                    Copy(Output("c"), Output("signed.count")),
                 ])
             ])
         ])
@@ -156,6 +173,7 @@ class TestSwitch(unittest.TestCase):
                 Switch(Input("category"))
                 .case(["cars"], [
                     Copy(Input("wheel"), Output("wheel")),
+                    Copy(Input("weight"), VirtualVar("avg.weight"))
                 ])
                 .case(["real_estate"], [
                     Copy(Input("address"), Output("address"))
@@ -170,7 +188,12 @@ class TestSwitch(unittest.TestCase):
             'category': 'cars',
             'wheel': 12
         }
+
+        virtual = {
+            "avg.weight": 1765
+        }
         self.assertDictEqual(output, context.stores[Output.section])
+        self.assertDictEqual(virtual, context.stores[Virtual.section])
 
     def test_switch_merge(self):
         context = Context({
