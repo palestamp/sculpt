@@ -1,0 +1,24 @@
+
+
+ERRORS_THRESHOLD=0
+WARNINGS_THRESHOLD=10
+
+
+OUT=$(pylint ./sculpt)
+
+PYLINT_ERRORS=$(printf $OUT | grep '\[E' | wc -l)
+PYLINT_WARNINGS=$(printf "$OUT" | grep 'W' | wc -l)
+
+if [[ $PYLINT_ERRORS -gt $ERRORS_THRESHOLD ]]; then
+    echo "Pylint issues exceeded number of errors ($PYLINT_ERRORS > $ERRORS_THRESHOLD)"
+    exit 1
+fi
+
+if [[ $PYLINT_WARNINGS -gt $WARNINGS_THRESHOLD ]]; then
+    echo "Pylint issues exceeded number of errors ($PYLINT_ERRORS > $WARNINGS_THRESHOLD)"
+    exit 1
+fi
+
+echo "$OUT"
+echo "errors_count=$PYLINT_ERRORS"
+echo "warnings_count=$PYLINT_WARNINGS"

@@ -3,4 +3,6 @@ python:
   - "2.7"
   - "3.6"
 script:
-  - python -m unittest discover test
+  - pip install -r ./requirements/requirements_ci.txt
+  - make test
+  - make lint
