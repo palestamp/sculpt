@@ -208,3 +208,62 @@ class TestActions(unittest.TestCase):
             'wheel': 12
         }
         self.assertDictEqual(output, context.stores[Output.section])
+
+    def test_switch_merge_different(self):
+        cars_branch = (
+            Switch(Input("category"), Input("wheel"))
+            .case(["cars", 12], [
+                Copy(Input("wheel"), Output("wheel")),
+            ])
+        )
+
+        real_estate_branch = (
+            Switch(Input("category"), Output("wheel"))
+            .case(["real_estate", 12], [
+                Copy(Input("address"), Output("address")),
+            ])
+        )
+
+        with self.assertRaises(ValueError):
+            (
+                Switch(Input("category"))
+                .merge(cars_branch)
+                .merge(real_estate_branch)
+                .default([])
+            )
+
+    def test_switch_no_fields(self):
+        context = Context({
+            "category": "cars",
+            "wheel": 12,
+            "weight": 1765
+        })
+
+        cars_branch = (
+            Switch(Input("category"), Input("type"))
+            .case(["cars", "sell"], [
+                Copy(Input("wheel"), Output("wheel")),
+            ])
+        )
+
+        real_estate_branch = (
+            Switch(Input("category"), Input("type"))
+            .case(["real_estate", "sell"], [
+                Copy(Input("address"), Output("address")),
+            ])
+        )
+
+        main_case = (
+            Switch(Input("category"), Input("type"))
+            .merge(cars_branch)
+            .merge(real_estate_branch)
+            .default([])
+        )
+
+        executor = Executor([
+            main_case
+        ])
+
+        executor.run(context)
+
+        self.assertDictEqual({}, context.stores[Output.section])
