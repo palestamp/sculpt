@@ -51,7 +51,7 @@ class TestCopy(unittest.TestCase):
         }
         self.assertDictEqual(output, context.stores[Output.section])
 
-    def test_input_raises_on_assing_at_nit_time(self):
+    def test_input_raises_on_assing_at_init_time(self):
         with self.assertRaisesRegexp(ValueError, "set operation not allowed on Input"):
             Executor([
                 Copy(Input("age"), Input("age_2")),
@@ -59,6 +59,34 @@ class TestCopy(unittest.TestCase):
 
 
 class TestModifiers(unittest.TestCase):
+    def test_combine(self):
+        context = Context({
+            "person": {
+                "name": "Aaron",
+                "age": 56
+            }
+        })
+
+        combination = Combine(
+            Copy(Input("person.age"), Output("age")),
+            Copy(Input("person.name"), Output("name"))
+        )
+
+        executor = Executor([
+            combination,
+            Copy(Output("name"), Output("name_1"))
+        ])
+
+        executor.run(context)
+
+        output = {
+            'name_1': 'Aaron',
+            'name': 'Aaron',
+            'age': 56,
+        }
+
+        self.assertDictEqual(output, context.stores[Output.section])
+
     def test_each(self):
         context = Context({
             "items": [{

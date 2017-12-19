@@ -184,6 +184,14 @@ class Copy(object):
         self.right.set(context, value)
 
 
+class Combine(object):
+    def __init__(self, *actions):
+        self.actions = actions
+
+    def run(self, _context):
+        return self.actions
+
+
 class Each(object):
     def __init__(self, left, right, actions):
         self.left = left
