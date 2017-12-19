@@ -1,4 +1,6 @@
+#!/usr/bin/env bash
 
+set -e
 
 ERRORS_THRESHOLD=0
 WARNINGS_THRESHOLD=10
@@ -7,7 +9,7 @@ WARNINGS_THRESHOLD=10
 OUT=$(pylint ./sculpt)
 
 PYLINT_ERRORS=$(printf $OUT | grep '\[E' | wc -l)
-PYLINT_WARNINGS=$(printf "$OUT" | grep 'W' | wc -l)
+PYLINT_WARNINGS=$(printf "$OUT" | grep '\[W' | wc -l)
 
 if [[ $PYLINT_ERRORS -gt $ERRORS_THRESHOLD ]]; then
     echo "Pylint issues exceeded number of errors ($PYLINT_ERRORS > $ERRORS_THRESHOLD)"
