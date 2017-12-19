@@ -13,7 +13,8 @@ class Validate(object):
 
     def run(self, context):
         try:
-            self.validator._validate(context, self.field)  # pylint: disable=W0212
+            self.validator._validate(
+                context, self.field)  # pylint: disable=W0212
         except ValidationError as exc:
             context.errors.append(exc)
 
@@ -41,3 +42,23 @@ class NotEmptyValidator(BaseValidator):
             raise ValidationError(
                 message="{}:{} field does not exists".format(
                     field.section, field.label), **error_kwargs)
+
+
+class InValidator(BaseValidator):
+    def __init__(self, values, **error_kwargs):
+        self.error_kwargs = error_kwargs
+        self.values = set(values)
+
+    def validate(self, context, field):
+        exists = field.has(context)
+        value = field.get(context)
+
+        error_kwargs = {
+            "label": field.label,
+            "section": field.section
+        }
+        error_kwargs.update(self.error_kwargs)
+
+        if not exists or value not in self.values:
+            raise ValidationError("{}:{} field does not belong to requested values".format(
+                field.section, field.label), **error_kwargs)
