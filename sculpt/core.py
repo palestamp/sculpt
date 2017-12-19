@@ -146,13 +146,9 @@ class Switch(object):
         if len(switch_values) != len(self.fields):
             raise TypeError("Switch case length mismatch")
 
-        swap = self.tree
-        for switch_value in switch_values:
-            swap = swap.setdefault(switch_value, {})
-
-        swap["actions"] = actions
-
+        nested_set(self.tree, switch_values, {"actions": actions})
         self.dispatch_table.append((switch_values, actions))
+
         return self
 
     def default(self, actions):
@@ -162,24 +158,13 @@ class Switch(object):
     def run(self, ctx):
         keys = []
         for field in self.fields:
-            # XXX is there any case when if value does not exists
-            # in field - case can evaluate to match?
+            if not field.has(ctx):
+                return []
             keys.append(field.get(ctx))
 
-        found = True
-        swap = self.tree
-
-        for key in keys:
-            try:
-                swap = swap.get(key)
-            except AttributeError:
-                pass
-
-            if key is None:
-                found = False
-                break
-        if found:
-            return swap["actions"]
+        node = nested_get(self.tree, keys)
+        if node:
+            return node["actions"]
         return []
 
     def merge(self, other):
