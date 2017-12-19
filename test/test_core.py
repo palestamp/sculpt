@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import unittest
 
 from sculpt.core import *
@@ -26,7 +27,7 @@ class TestSome(unittest.TestCase):
                     'name': 'Aaron'
             }
         }
-        
+
         self.assertDictEqual(output, context.stores[Output._type])
 
     def test_each(self):
