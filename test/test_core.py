@@ -180,6 +180,34 @@ class TestModifiers(unittest.TestCase):
 
         self.assertDictEqual(output, context.stores[Output.section])
 
+    def test_inplace_list_unwrap(self):
+        context = Context({
+            "items": [{
+                "year": 1987,
+                "count": 145
+            }, {
+                "year": 1992,
+                "count": 178
+            }]
+        })
+
+        executor = Executor([
+            Each(Input("items"), Output("years"), [
+                Copy(Input("year"), VirtualList("tmp.years").append()),
+            ]),
+            Copy(VirtualList("tmp.years"), Output("years")),
+            Delete(VirtualList("tmp.years"))
+        ])
+
+        executor.run(context)
+
+        output = {
+            "years": [1987, 1992]
+        }
+        virtual = {}
+        self.assertDictEqual(virtual, context.stores[Virtual.section])
+        self.assertDictEqual(output, context.stores[Output.section])
+
 
 class TestSwitch(unittest.TestCase):
     def test_switch_case(self):

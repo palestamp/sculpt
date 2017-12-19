@@ -35,7 +35,10 @@ class Input(Storage):
     def has(self, context):
         return nested_has(context.cursors[self.section], split_label(self.label))
 
-    def set(self, _context, _value):  # pylint: disable=no-self-use
+    def delete(self, _context): # pylint: disable=no-self-use
+        raise ValueError("delete operation not allowed on Input")
+
+    def set(self, _context, _value): # pylint: disable=no-self-use
         raise ValueError("set operation not allowed on Input")
 
 
@@ -48,6 +51,9 @@ class Output(Storage):
     def has(self, context):
         return nested_has(context.cursors[self.section], split_label(self.label))
 
+    def delete(self, context):
+        nested_delete(context.cursors[self.section], split_label(self.label))
+
     def set(self, context, value):
         nested_set(context.cursors[self.section],
                    split_label(self.label), value)
@@ -55,6 +61,10 @@ class Output(Storage):
 
 class Virtual(Storage):
     section = "virtual"
+
+    def delete(self, context):
+        if self.label in context.stores[self.section]:
+            del context.stores[self.section][self.label]
 
 
 class VirtualVar(Virtual):
@@ -192,6 +202,14 @@ class Combine(object):
         return self.actions
 
 
+class Delete(object):
+    def __init__(self, field):
+        self.field = field
+
+    def run(self, context):
+        self.field.delete(context)
+
+
 class Each(object):
     def __init__(self, left, right, actions):
         self.left = left
@@ -324,6 +342,16 @@ def _nested_access(dct, keys):
 def nested_get(dct, keys):
     value, _ = _nested_access(dct, keys)
     return value
+
+def nested_delete(dct, keys):
+    if not keys:
+        return
+
+    parent_path = keys[:-1]
+    key = keys[-1]
+    target = nested_get(dct, parent_path)
+    if isinstance(target, dict):
+        del target[key]
 
 
 def nested_has(dct, keys):
