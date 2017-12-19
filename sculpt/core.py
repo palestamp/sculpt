@@ -1,4 +1,5 @@
 from functools import reduce
+from itertools import izip_longest
 from operator import getitem
 
 
@@ -129,6 +130,70 @@ class With(object):
         self.right.set(context, right_object)
 
 
+class Switch(object):
+    def __init__(self, *fields):
+        self.fields = fields
+        self.tree = {}
+        self.default_actions = None
+
+        self.dispatch_table = []
+
+    def case(self, switch_values, actions):
+        if not isinstance(switch_values, (tuple, list)):
+            raise TypeError("Switch case should be tuple or list")
+
+        if len(switch_values) != len(self.fields):
+            raise TypeError("Switch case length mismatch")
+
+        swap = self.tree
+        for switch_value in switch_values:
+            swap = swap.setdefault(switch_value, {})
+
+        swap["actions"] = actions
+
+        self.dispatch_table.append((switch_values, actions))
+        return self
+
+    def default(self, actions):
+        self.default_actions = actions
+        return self
+
+    def run(self, ctx):
+        keys = []
+        for field in self.fields:
+            # XXX is there any case when if value does not exists
+            # in field - case can evaluate to match?
+            keys.append(field.get(ctx))
+
+        found = True
+        swap = self.tree
+
+        for key in keys:
+            try:
+                swap = swap.get(key)
+            except AttributeError:
+                pass
+
+            if key is None:
+                found = False
+                break
+        if found:
+            return swap["actions"]
+
+    def merge(self, other):
+        all_eq = all(a == b for a, b in izip_longest(self.fields, other.fields))
+
+        if not all_eq:
+            raise ValueError("accessors are different")
+        if other.default_actions is not None:
+            raise ValueError("can not merge default actions")
+
+        for values, actions in other.dispatch_table:
+            self.case(values, actions)
+
+        return self
+
+
 class Executor(object):
     def __init__(self, actions):
         self.actions = actions
@@ -139,7 +204,9 @@ class Executor(object):
 
 def run_actions(context, actions):
     for action in actions:
-        action.run(context)
+        next_actions = action.run(context)
+        if next_actions is not None:
+            run_actions(context, next_actions)
 
 
 def _nested_access(dct, keys):

@@ -5,7 +5,7 @@
 
 # TODO
 
-- [ ] Field switch
+- [X] Field switch
 - [ ] InValidator
 - [ ] VirtualVar + VirtualList
 - [ ] Combine action
