@@ -1,8 +1,12 @@
 language: python
+
 python:
   - "2.7"
   - "3.6"
-script:
+
+install:
   - pip install -r ./requirements/requirements_ci.txt >/dev/null
+
+script:
   - make test
   - make lint
