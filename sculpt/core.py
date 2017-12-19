@@ -16,6 +16,8 @@ class Storage(object):
         context.cursors[self.section] = item
 
     def __eq__(self, other):
+        if type(self) != type(other):
+            return False
         return self.section == other.section and self.label == other.label
 
 
@@ -158,6 +160,7 @@ class Switch(object):
     def run(self, ctx):
         keys = []
         for field in self.fields:
+            # case can not match abscent label
             if not field.has(ctx):
                 return []
             keys.append(field.get(ctx))
