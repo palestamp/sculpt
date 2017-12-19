@@ -52,13 +52,7 @@ class TestCopy(unittest.TestCase):
         self.assertDictEqual(output, context.stores[Output.section])
 
     def test_input_raises_on_assing_at_nit_time(self):
-        context = Context({
-            "person": {
-                "name": "Aaron"
-            }
-        })
-
-        with self.assertRaisesRegex(ValueError, "set operation not allowed on Input"):
+        with self.assertRaisesRegexp(ValueError, "set operation not allowed on Input"):
             Executor([
                 Copy(Input("age"), Input("age_2")),
             ])
