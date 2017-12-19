@@ -1,68 +1,76 @@
-from operator import getitem
 from functools import reduce
-
+from operator import getitem
 
 
 class Storage(object):
-    _type = None
-
-    def get_cursor(self, context):
-        return context.cursors[self._type]
-
-    def set_cursor(self, context, item):
-        context.cursors[self._type] = item
-
-
-class Input(Storage):
-    _type = "input"
+    section = None
 
     def __init__(self, label):
         self.label = label
 
+    def get_cursor(self, context):
+        return context.cursors[self.section]
+
+    def set_cursor(self, context, item):
+        context.cursors[self.section] = item
+
+    def __eq__(self, other):
+        return (self.section == other.section and self.label == other.label)
+
+
+class Input(Storage):
+    section = "input"
+
     def get(self, context):
-        return nested_get(context.cursors[self._type], split_label(self.label))
+        return nested_get(context.cursors[self.section], split_label(self.label))
+
+    def has(self, context):
+        return nested_has(context.cursors[self.section], split_label(self.label))
 
     def set(self, context, value):
         raise ValueError("set operation not allowed on Input")
 
 
 class Output(Storage):
-    _type = "output"
-    
-    def __init__(self, label):
-        self.label = label
+    section = "output"
 
     def get(self, context):
-        return nested_get(context.cursors[self._type], split_label(self.label))
+        return nested_get(context.cursors[self.section], split_label(self.label))
+    
+    def has(self, context):
+        return nested_has(context.cursors[self.section], split_label(self.label))
 
     def set(self, context, value):
-        nested_set(context.cursors[self._type], split_label(self.label), value)
+        nested_set(context.cursors[self.section], split_label(self.label), value)
 
 
 class Context(object):
     def __init__(self, _input):
         self.stores = {
-            Input._type: _input,
-            Output._type: {}
+            Input.section: _input,
+            Output.section: {}
         }
 
         self.cursors = {
-            Input._type: self.stores[Input._type],
-            Output._type: self.stores[Output._type]
+            Input.section: self.stores[Input.section],
+            Output.section: self.stores[Output.section]
         }
 
-
-class Action(object):
-    pass
+        self.errors = []
 
 
-class Copy(Action):
+class Copy(object):
     def __init__(self, left, right):
         self.left = left
         self.right = right
 
     def run(self, context):
         value = self.left.get(context)
+
+        # ignore field if it not exists
+        if value is None and not self.left.has(context):
+            return
+
         self.right.set(context, value)
 
 
@@ -79,13 +87,13 @@ class Each(object):
 
         old_left_cursor = self.left.get_cursor(context)
         old_right_cursor = self.right.get_cursor(context)
-        
+
         for item in left_list:
             self.left.set_cursor(context, item)
             self.right.set_cursor(context, {})
             run_actions(context, self.actions)
             right_list.append(self.right.get_cursor(context))
-        
+
         self.left.set_cursor(context, old_left_cursor)
         self.right.set_cursor(context, old_right_cursor)
         self.right.set(context, right_list)
@@ -105,18 +113,18 @@ class With(object):
         # remember old cursor positions
         old_left_cursor = self.left.get_cursor(context)
         old_right_cursor = self.right.get_cursor(context)
-        
+
         # set new cursos positions
         self.left.set_cursor(context, left_object)
         self.right.set_cursor(context, right_object)
 
         # run actions, right_object will be modified
         run_actions(context, self.actions)
-        
+
         # restore old cursors
         self.left.set_cursor(context, old_left_cursor)
         self.right.set_cursor(context, old_right_cursor)
-        
+
         # with old right cursor set assign new value
         self.right.set(context, right_object)
 
@@ -142,8 +150,13 @@ def _nested_access(dct, keys):
 
 
 def nested_get(dct, keys):
-    v, _ = _nested_access(dct, keys)
-    return v
+    value, _ = _nested_access(dct, keys)
+    return value
+
+
+def nested_has(dct, keys):
+    _, exists = _nested_access(dct, keys)
+    return exists
 
 
 def nested_set(dct, keys, value):

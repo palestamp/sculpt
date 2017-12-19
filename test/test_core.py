@@ -28,8 +28,29 @@ class TestSome(unittest.TestCase):
             }
         }
 
-        self.assertDictEqual(output, context.stores[Output._type])
+        self.assertDictEqual(output, context.stores[Output.section])
+    
+    def test_copy_ignore_non_existent_field(self):
+        context = Context({
+            "person": {
+                "name": "Aaron"
+            }
+        })
 
+        executor = Executor([
+            Copy(Input("age"), Output("age")),
+            Copy(Input("person.name"), Output("name")),
+            Copy(Output("name"), Output("name_1"))
+        ])
+
+        executor.run(context)
+
+        output = {
+            'name_1': 'Aaron',
+            'name': 'Aaron',
+        }
+        self.assertDictEqual(output, context.stores[Output.section])
+        
     def test_each(self):
         context = Context({
             "items": [{
@@ -67,7 +88,7 @@ class TestSome(unittest.TestCase):
             }]
         }
 
-        self.assertDictEqual(output, context.stores[Output._type])
+        self.assertDictEqual(output, context.stores[Output.section])
 
     def test_with(self):
         context = Context({
@@ -116,4 +137,4 @@ class TestSome(unittest.TestCase):
             }
         }
 
-        self.assertDictEqual(output, context.stores[Output._type])
+        self.assertDictEqual(output, context.stores[Output.section])
