@@ -16,7 +16,7 @@ class Storage(object):
         context.cursors[self.section] = item
 
     def __eq__(self, other):
-        if type(self) != type(other):
+        if not isinstance(other, self.__class__):
             return False
         return self.section == other.section and self.label == other.label
 
