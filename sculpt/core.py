@@ -16,7 +16,7 @@ class Storage(object):
         context.cursors[self.section] = item
 
     def __eq__(self, other):
-        return (self.section == other.section and self.label == other.label)
+        return self.section == other.section and self.label == other.label
 
 
 class Input(Storage):
@@ -28,7 +28,7 @@ class Input(Storage):
     def has(self, context):
         return nested_has(context.cursors[self.section], split_label(self.label))
 
-    def set(self, context, value):
+    def set(self, _context, _value): # pylint: disable=no-self-use
         raise ValueError("set operation not allowed on Input")
 
 
@@ -37,12 +37,13 @@ class Output(Storage):
 
     def get(self, context):
         return nested_get(context.cursors[self.section], split_label(self.label))
-    
+
     def has(self, context):
         return nested_has(context.cursors[self.section], split_label(self.label))
 
     def set(self, context, value):
-        nested_set(context.cursors[self.section], split_label(self.label), value)
+        nested_set(context.cursors[self.section],
+                   split_label(self.label), value)
 
 
 class Context(object):
@@ -179,9 +180,11 @@ class Switch(object):
                 break
         if found:
             return swap["actions"]
+        return []
 
     def merge(self, other):
-        all_eq = all(a == b for a, b in izip_longest(self.fields, other.fields))
+        all_eq = all(a == b for a, b in izip_longest(
+            self.fields, other.fields))
 
         if not all_eq:
             raise ValueError("accessors are different")
