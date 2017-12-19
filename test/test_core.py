@@ -4,7 +4,7 @@ import unittest
 from sculpt.core import *
 
 
-class TestActions(unittest.TestCase):
+class TestCopy(unittest.TestCase):
     def test_copy(self):
         context = Context({
             "person": {
@@ -51,6 +51,8 @@ class TestActions(unittest.TestCase):
         }
         self.assertDictEqual(output, context.stores[Output.section])
 
+
+class TestModifiers(unittest.TestCase):
     def test_each(self):
         context = Context({
             "items": [{
@@ -139,6 +141,8 @@ class TestActions(unittest.TestCase):
 
         self.assertDictEqual(output, context.stores[Output.section])
 
+
+class TestSwitch(unittest.TestCase):
     def test_switch_case(self):
         context = Context({
             "category": "cars",
