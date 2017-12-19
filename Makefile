@@ -1,6 +1,7 @@
 .PHONY: test
 test:
-	python2 -m unittest discover test -v
+	coverage run -m unittest discover test -v
+	@coveralls
 
 .PHONY: lint
 lint:
