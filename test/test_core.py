@@ -4,7 +4,7 @@ import unittest
 from sculpt.core import *
 
 
-class TestSome(unittest.TestCase):
+class TestActions(unittest.TestCase):
     def test_copy(self):
         context = Context({
             "person": {
@@ -199,7 +199,7 @@ class TestSome(unittest.TestCase):
         executor = Executor([
             Copy(Input("category"), Output("category")),
             main_case
-       ])
+        ])
 
         executor.run(context)
 
