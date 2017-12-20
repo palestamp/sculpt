@@ -35,10 +35,10 @@ class Input(Storage):
     def has(self, context):
         return nested_has(context.cursors[self.section], split_label(self.label))
 
-    def delete(self, _context): # pylint: disable=no-self-use
+    def delete(self, _context):  # pylint: disable=no-self-use
         raise ValueError("delete operation not allowed on Input")
 
-    def set(self, _context, _value): # pylint: disable=no-self-use
+    def set(self, _context, _value):  # pylint: disable=no-self-use
         raise ValueError("set operation not allowed on Input")
 
 
@@ -343,6 +343,12 @@ def nested_get(dct, keys):
     value, _ = _nested_access(dct, keys)
     return value
 
+
+def nested_has(dct, keys):
+    _, exists = _nested_access(dct, keys)
+    return exists
+
+
 def nested_delete(dct, keys):
     if not keys:
         return
@@ -352,11 +358,6 @@ def nested_delete(dct, keys):
     target = nested_get(dct, parent_path)
     if isinstance(target, dict):
         del target[key]
-
-
-def nested_has(dct, keys):
-    _, exists = _nested_access(dct, keys)
-    return exists
 
 
 def nested_set(dct, keys, value):

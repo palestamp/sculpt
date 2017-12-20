@@ -10,4 +10,4 @@
 - [X] VirtualVar + VirtualList
 - [X] Combine action
 - [ ] YML rules definition
-- [ ] inplace object unwrap: `[{"name": "python"}, {"name": "go"}]` -> `["python", "go"]`
+- [X] inplace object unwrap (primitive): `[{"name": "python"}, {"name": "go"}]` -> `["python", "go"]`
