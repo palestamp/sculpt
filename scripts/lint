@@ -9,8 +9,8 @@ OUT=$(pylint ./sculpt)
 
 set -e
 
-PYLINT_ERRORS=$(printf $OUT | grep -E '^E:' | wc -l)
-PYLINT_WARNINGS=$(printf "$OUT" | grep '^W:' | wc -l)
+PYLINT_ERRORS=$(printf "${OUT}" | grep -E '^E:' | wc -l)
+PYLINT_WARNINGS=$(printf "${OUT}" | grep '^W:' | wc -l)
 
 
 echo "$OUT"

@@ -92,8 +92,8 @@ class VirtualList(Virtual):
 
     def get(self, context):
         val = context.stores[self.section].get(self.label, [])
-        for cb in self.cbs:
-            val = cb(val)
+        for callback in self.cbs:
+            val = callback(val)
         return val
 
     def has(self, context):
@@ -113,16 +113,16 @@ class VirtualList(Virtual):
     def extend(self):
         return self.__class__(self.label, _op="extend")
 
-    def map(self, cb):
+    def map(self, callback):
         def _map(_list):
-            return list(map(cb, _list))
+            return list(map(callback, _list))
         self.cbs.append(_map)
         return self
 
-    def find(self, cb):
+    def find(self, _filter):
         def _find(_list):
             for item in _list:
-                if cb(item):
+                if _filter(item):
                     return item
             return None
 
