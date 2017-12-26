@@ -110,3 +110,37 @@ class TestResolver(unittest.TestCase):
             "wigth": 10
         }]
         self.assertListEqual(expect, out.rules.data)
+
+    def test_fn(self):
+        sample_base = os.path.join(CASES_DIR, "fn")
+        loader = Loader(sample_base)
+        data = loader.load_file("parent.yml")
+
+        resolver = Resolver(loader)
+
+        out = resolver.resolve(data)
+
+        expect = [{
+            "combine": [{
+                "op": "copy",
+                "left": {
+                    "type": "input",
+                    "name": "region"
+                },
+                "right": {
+                    "type": "output",
+                    "name": "region"
+                }
+            }]
+        }, {
+            "op": "copy",
+            "left": {
+                "type": "input",
+                "name": "name"
+            },
+            "right": {
+                "type": "output",
+                "name": "name"
+            }
+        }]
+        self.assertEqual(expect, out.rules.data)

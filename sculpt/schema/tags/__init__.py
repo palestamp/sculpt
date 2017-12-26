@@ -1,6 +1,8 @@
 from .include import Include, IncludeRules
-from .kv import Keys, Values, Delegate
+from .kv import Keys, Values
 from .ref import Ref, IRef
+from .delegate import Delegate
+from .fn import Fn
 
 SCULPT_TAGS = [
     Include,
@@ -8,5 +10,6 @@ SCULPT_TAGS = [
     IRef,
     Keys,
     Values,
-    IncludeRules
+    IncludeRules,
+    Fn,
 ]

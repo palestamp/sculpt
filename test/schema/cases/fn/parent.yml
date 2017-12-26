@@ -1,0 +1,20 @@
+id: parent
+
+variables:
+  region:
+    a: 1
+    b: 2
+
+functions:
+  copy-in-out:
+    define: ['name', 'values']
+    rules:
+    - op: copy
+      left: {type: input, name: $name}
+      right: {type: output, name: $name}
+
+rules:
+  - !fn {ref: copy-in-out, defs: {name: region, values: !values {map: !ref region}}}
+  - op: copy
+    left: {type: input, name: name}
+    right: {type: output, name: name}

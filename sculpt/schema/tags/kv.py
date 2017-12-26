@@ -3,12 +3,7 @@ import yaml.nodes
 
 from .ref import Ref, IRef
 from .exceptions import TagError
-
-
-class Delegate(object):
-    def delegate(self, func, scope):
-        self.obj = func(self.obj, scope)
-        return self
+from .delegate import Delegate
 
 
 class NestedNode(yaml.YAMLObject, Delegate):
