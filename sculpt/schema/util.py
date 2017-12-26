@@ -1,10 +1,8 @@
-
-from collections import UserDict
 from functools import reduce
 from operator import getitem
 
 
-class InfoDict(UserDict):
+class InfoDict(dict):
     def __init__(self, *args, **kwargs):
         super(InfoDict, self).__init__(*args, **kwargs)
         self.lineno = None
