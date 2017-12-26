@@ -1,5 +1,4 @@
 import os
-from collections import UserDict
 
 from .tags import Delegate, Include, Ref, IRef, Keys, Values, IncludeRules
 from .tags import SCULPT_TAGS
@@ -8,14 +7,15 @@ from .util import nested_get
 
 
 class ResolutionError(Exception):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args):
         super(ResolutionError, self).__init__(self, *args)
         self.msg = args[0]
         self.node = args[1]
         self.orig_exc = args[2]
 
     def __str__(self):
-        return "failed to resolve {} on line: {}, ({})".format(self.msg, self.node.__lineno__, self.orig_exc)
+        return "failed to resolve {} on line: {}, ({})".format(
+            self.msg, self.node.__lineno__, self.orig_exc)
 
 
 class Section(dict):
@@ -69,9 +69,11 @@ class Scope(object):
         )
 
     def resolve(self, resolver):
-        self.variables = resolver.resolve_section( section=self.variables, scope=self)
-        self.functions = resolver.resolve_section( section=self.variables, scope=self)
-        self.rules = resolver.resolve_section( section=self.rules, scope=self,)
+        self.variables = resolver.resolve_section(
+            section=self.variables, scope=self)
+        self.functions = resolver.resolve_section(
+            section=self.variables, scope=self)
+        self.rules = resolver.resolve_section(section=self.rules, scope=self)
         return self
 
     def lookup_variable(self, ref):
@@ -104,8 +106,7 @@ class Resolver(object):
                 return [_recur(v, func, delegate) for v in node]
             elif isinstance(node, Delegate) and delegate:
                 return node.delegate(func, scope)
-            else:
-                return func(node, scope)
+            return func(node, scope)
 
         data = _recur(data, self._filter_nodes(
             Include, allowed_tags, section_name))
