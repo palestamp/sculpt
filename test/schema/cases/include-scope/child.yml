@@ -1,0 +1,12 @@
+id: child
+
+variables:
+  names:
+    price: child-price
+  common: !include 'file://common-params.yml'
+
+rules:
+  - op: copy
+    left: {type: input, name: !ref names.price}
+    right: {type: output, name: !ref names.iprice}
+    wigth: !ref common.weight.high

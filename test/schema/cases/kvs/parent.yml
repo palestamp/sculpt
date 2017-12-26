@@ -1,0 +1,13 @@
+id: parent
+
+variables:
+  region:
+    first: 1
+    second: 2
+
+rules:
+  region_keys: !keys {map: !ref region}
+  region_values: !values {map: !ref region}
+
+  inplace_keys: !keys {map: {first: 1, second: 2}}
+  inplace_values: !values {map: {first: 1, second: 2}}

@@ -1,0 +1,15 @@
+id: parent
+
+variables:
+  region: 1
+  map:
+    points:
+      a: 1
+      b: 2
+      c: 3
+
+rules:
+  key_0: !ref region
+  key_1: !ref map.points.b
+  key_2: !ref map.points.NOTEXIST
+  iref_0: !iref counts
