@@ -9,6 +9,10 @@ BASE_DIR = os.path.dirname(__file__)
 CASES_DIR = os.path.join(BASE_DIR, "cases")
 
 
+def assert_items_equal(tc, l1, l2):
+    tc.assertListEqual(sorted(l1), sorted(l2))
+
+
 class TestResolver(unittest.TestCase):
     def test_includes(self):
         sample_base = os.path.join(CASES_DIR, "includes")
@@ -62,13 +66,11 @@ class TestResolver(unittest.TestCase):
         resolver = Resolver(loader)
 
         out = resolver.resolve(data)
-        expect = {
-            'region_keys': ["first", "second"],
-            'region_values': [1, 2],
-            'inplace_keys': ["first", "second"],
-            'inplace_values': [1, 2],
-        }
-        self.assertDictEqual(expect, out.rules.data)
+        d = out.rules.data
+        assert_items_equal(self, d["region_keys"], ["first", "second"])
+        assert_items_equal(self, d["region_values"], [1, 2])
+        assert_items_equal(self, d["inplace_keys"], ["first", "second"])
+        assert_items_equal(self, d["inplace_values"], [1, 2])
 
     def test_scoped_include(self):
         sample_base = os.path.join(CASES_DIR, "include-scope")
