@@ -35,5 +35,8 @@ rules:
     left: {type: input, key: region}
     right: {type: output, key: region}
   - !fn {ref: copy-in-set, defs: {name: area, values: !values {map: !ref areas}}}
-
-
+- op: copy
+  left: {type: output, key: parent_category}
+  right: {type: output, key: parent_category_final}
+- op: delete
+  field: {type: output, key: parent_category}

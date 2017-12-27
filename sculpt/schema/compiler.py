@@ -1,7 +1,7 @@
 
 from sculpt.core import (
-    Copy, Switch, Input, Output, 
-    VirtualVar, Combine, Validate, Apply
+    Copy, Switch, Input, Output,
+    VirtualVar, Combine, Validate, Apply, Delete
 )
 
 from sculpt.validation import InSetValidator, NotEmptyValidator
@@ -19,6 +19,7 @@ class Compiler(object):
         "copy": Copy,
         "combine": Combine,
         "apply": Apply,
+        "delete": Delete,
     }
 
     validators = {
