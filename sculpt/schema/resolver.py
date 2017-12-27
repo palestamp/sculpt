@@ -3,7 +3,7 @@ import os
 from .tags import Delegate, Include, Ref, IRef, Keys, Values, IncludeRules, Fn
 from .tags import SCULPT_TAGS
 from .yml import get_loader
-from .util import nested_get
+from .util import nested_access
 
 
 class ResolutionError(Exception):
@@ -77,10 +77,10 @@ class Scope(object):
         return self
 
     def lookup_variable(self, ref):
-        return nested_get(self.variables.data, ref.split("."))
+        return nested_access(self.variables.data, ref.split("."))
 
     def lookup_function(self, ref):
-        return nested_get(self.functions.data, ref.split("."))
+        return nested_access(self.functions.data, ref.split("."))
 
 
 class Resolver(object):
@@ -89,7 +89,7 @@ class Resolver(object):
         self.irefs = irefs or {}
 
     def lookup_iref(self, ref):
-        return nested_get(self.irefs, ref.split("."))
+        return nested_access(self.irefs, ref.split("."))
 
     def resolve(self, data):
         scope = Scope(data)

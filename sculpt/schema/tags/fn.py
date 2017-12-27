@@ -5,10 +5,14 @@ from sculpt.compat import isstr
 
 class FnResolver(object):
     def resolve(self, _resolver, scope, ref, defs):
-        fnbody = scope.lookup_function(ref)
+        found, fnbody = scope.lookup_function(ref)
+        if not found:
+            raise Exception("function '{}' not found".format(ref))
+
         compiled = self.resolve_defines(defs, fnbody)
         return {
-            "combine": compiled["rules"]
+            "op": "combine",
+            "ops": compiled["rules"]
         }
 
     def resolve_defines(self, defines, fnbody):

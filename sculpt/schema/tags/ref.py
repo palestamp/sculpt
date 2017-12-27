@@ -5,7 +5,10 @@ from ..util import nested_get
 
 class RefResolver(object):
     def resolve(self, _resolver, scope, ref):
-        return scope.lookup_variable(ref)
+        found, var = scope.lookup_variable(ref)
+        if not found:
+            raise Exception("ref '{}' not found".format(ref))
+        return var
 
 
 class Ref(yaml.YAMLObject):
@@ -32,7 +35,10 @@ class Ref(yaml.YAMLObject):
 
 class IRefResolver(object):
     def resolve(self, resolver, _scope, ref):
-        return resolver.lookup_iref(ref)
+        found, iref = resolver.lookup_iref(ref)
+        if not found:
+            raise Exception("iref '{}' not found".format(ref))
+        return iref
 
 
 class IRef(yaml.YAMLObject):

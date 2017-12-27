@@ -1,7 +1,7 @@
 import unittest
 
-from sculpt.core import Context, Output, Input, Copy, Executor
-from sculpt.validation import Validate, NotEmptyValidator, InValidator
+from sculpt.core import Context, Output, Input, Copy, Executor, Validate
+from sculpt.validation import NotEmptyValidator, InSetValidator
 
 
 class TestValidation(unittest.TestCase):
@@ -31,7 +31,7 @@ class TestValidation(unittest.TestCase):
         })
 
         executor = Executor([
-            Validate(Input("age"), InValidator([1, 2, 3, 4, 5]))
+            Validate(Input("age"), InSetValidator([1, 2, 3, 4, 5]))
         ])
 
         executor.run(context)

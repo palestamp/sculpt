@@ -1,21 +1,8 @@
 
-
 class ValidationError(Exception):
     def __init__(self, message, **kwargs):
         super(ValidationError, self).__init__(message)
         self.kwargs = kwargs
-
-
-class Validate(object):
-    def __init__(self, field, validator):
-        self.field = field
-        self.validator = validator
-
-    def run(self, context):
-        try:
-            self.validator._validate(context, self.field)  # pylint: disable=protected-access
-        except ValidationError as exc:
-            context.errors.append(exc)
 
 
 class BaseValidator(object):
@@ -43,7 +30,7 @@ class NotEmptyValidator(BaseValidator):
                     field.section, field.label), **error_kwargs)
 
 
-class InValidator(BaseValidator):
+class InSetValidator(BaseValidator):
     def __init__(self, values, **error_kwargs):
         self.error_kwargs = error_kwargs
         self.values = set(values)

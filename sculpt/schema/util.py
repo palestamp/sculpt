@@ -8,13 +8,18 @@ class InfoDict(dict):
         self.lineno = None
 
 
-def _nested_access(dct, keys):
+def nested_access(dct, keys):
     try:
-        return reduce(getitem, keys, dct), True
+        return True, reduce(getitem, keys, dct)
     except KeyError:
-        return None, False
+        return False, None
 
 
 def nested_get(dct, keys):
-    value, _ = _nested_access(dct, keys)
+    _, value = nested_access(dct, keys)
     return value
+
+
+def nested_has(dct, keys):
+    exists, _ = nested_access(dct, keys)
+    return exists

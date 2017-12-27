@@ -81,7 +81,6 @@ class IncludeRules(yaml.YAMLObject):
 
     @classmethod
     def from_yaml(cls, loader, node):
-        
         return cls(node.value)
 
     @classmethod
