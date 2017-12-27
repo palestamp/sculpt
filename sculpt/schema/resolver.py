@@ -1,6 +1,6 @@
 import os
 
-from .tags import Delegate, Include, Ref, IRef, Keys, Values, IncludeRules
+from .tags import Delegate, Include, Ref, IRef, Keys, Values, IncludeRules, Fn
 from .tags import SCULPT_TAGS
 from .yml import get_loader
 from .util import nested_get
@@ -46,7 +46,7 @@ class Scope(object):
 
     variables_allowed_tags = (Include,)
     functions_allowed_tags = (Include, Ref, IRef, Keys, Values)
-    rules_allowed_tags = (Include, Ref, IRef, Keys, Values, IncludeRules)
+    rules_allowed_tags = (Include, Ref, IRef, Keys, Values, IncludeRules, Fn)
 
     def __init__(self, data):
         self.id = data[self.id_key]
@@ -72,12 +72,15 @@ class Scope(object):
         self.variables = resolver.resolve_section(
             section=self.variables, scope=self)
         self.functions = resolver.resolve_section(
-            section=self.variables, scope=self)
+            section=self.functions, scope=self)
         self.rules = resolver.resolve_section(section=self.rules, scope=self)
         return self
 
     def lookup_variable(self, ref):
         return nested_get(self.variables.data, ref.split("."))
+
+    def lookup_function(self, ref):
+        return nested_get(self.functions.data, ref.split("."))
 
 
 class Resolver(object):
@@ -99,13 +102,13 @@ class Resolver(object):
         return scope.resolve(self)
 
     def resolve_dict(self, data, scope=None, allowed_tags=None, section_name=None):
-        def _recur(node, func, delegate=True):
+        def _recur(node, func):
             if isinstance(node, dict):
-                return {k: _recur(v, func, delegate) for k, v in node.items()}
+                return {k: _recur(v, func) for k, v in node.items()}
             elif isinstance(node, list):
-                return [_recur(v, func, delegate) for v in node]
-            elif isinstance(node, Delegate) and delegate:
-                return node.delegate(func, scope)
+                return [_recur(v, func) for v in node]
+            elif isinstance(node, Delegate):
+                node = node.delegate(func, scope)
             return func(node, scope)
 
         data = _recur(data, self._filter_nodes(
@@ -113,9 +116,11 @@ class Resolver(object):
         data = _recur(data, self._filter_nodes(
             (Ref, IRef), allowed_tags, section_name))
         data = _recur(data, self._filter_nodes(
-            (Keys, Values), allowed_tags, section_name), delegate=False)
+            (Keys, Values), allowed_tags, section_name))
         data = _recur(data, self._filter_nodes(
             IncludeRules, allowed_tags, section_name))
+        data = _recur(data, self._filter_nodes(
+            Fn, allowed_tags, section_name))
         return data
 
     def resolve_section(self, section, scope=None):
