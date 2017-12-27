@@ -1,7 +1,8 @@
 import yaml
 
-from .delegate import Delegate
 from sculpt.compat import isstr
+from .delegate import Delegate
+
 
 class FnResolver(object):
     def resolve(self, _resolver, scope, ref, defs):
@@ -18,29 +19,29 @@ class FnResolver(object):
     def resolve_defines(self, defines, fnbody):
         allowed = fnbody.get('define', [])
 
-        def _recur(d, func):
-            if isinstance(d, dict):
-                return {k: _recur(v, func) for k, v in d.items()}
-            elif isinstance(d, list):
-                return [_recur(v, func) for v in d]
-            return func(d)
+        def _recur(node, func):
+            if isinstance(node, dict):
+                return {k: _recur(v, func) for k, v in node.items()}
+            elif isinstance(node, list):
+                return [_recur(v, func) for v in node]
+            return func(node)
 
-        def subs(vk):
-            is_var, k = self.variable(vk)
+        def subs(node):
+            is_var, name = self.variable(node)
             if is_var:
-                if k in allowed:
-                    return defines[k]
-            return vk
+                if name in allowed:
+                    return defines[name]
+            return node
 
         return _recur(fnbody, subs)
 
     @staticmethod
-    def variable(s):
-        if not isstr(s):
+    def variable(node):
+        if not isstr(node):
             return False, ""
 
-        if s and s[0] == '$':
-            return True, s[1:]
+        if node and node[0] == '$':
+            return True, node[1:]
         return False, ""
 
 

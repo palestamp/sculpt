@@ -1,8 +1,8 @@
 
 try:
-    basestring  # pylint:disable=undefined-variable
-    def isstr(s):
-        return isinstance(s, basestring) # pylint:disable=undefined-variable
+    basestring  # pylint:disable=undefined-variable,pointless-statement
+    def isstr(obj):
+        return isinstance(obj, basestring) # pylint:disable=undefined-variable
 except NameError:
-    def isstr(s):
-        return isinstance(s, str)
+    def isstr(obj):
+        return isinstance(obj, str)

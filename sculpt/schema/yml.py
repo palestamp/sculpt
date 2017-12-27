@@ -34,4 +34,3 @@ def get_loader(data):
     loader.compose_node = composer_with_lineno(loader)
     loader.construct_mapping = constructor_with_lineno(loader)
     return loader
-

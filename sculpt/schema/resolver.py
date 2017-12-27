@@ -49,7 +49,7 @@ class Scope(object):
     rules_allowed_tags = (Include, Ref, IRef, Keys, Values, IncludeRules, Fn)
 
     def __init__(self, data):
-        self.id = data[self.id_key]
+        self.ident = data[self.id_key]
         self.variables = Section(
             data=data.get(self.variables_key, {}),
             name=self.variables_key,
@@ -95,7 +95,7 @@ class Resolver(object):
         scope = Scope(data)
         res = self.resolve_scope(scope)
         if not res:
-            raise Exception("failed to resolve scope, id:{}".format(scope.id))
+            raise Exception("failed to resolve scope, id:{}".format(scope.ident))
         return res
 
     def resolve_scope(self, scope):
@@ -145,9 +145,9 @@ def cls_diff(right, left):
         return ()
 
     out = []
-    for c in right:
-        if c not in left:
-            out.append(c)
+    for cls in right:
+        if cls not in left:
+            out.append(cls)
     return tuple(out)
 
 

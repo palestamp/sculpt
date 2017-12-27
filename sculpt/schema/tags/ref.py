@@ -1,7 +1,6 @@
 
 import yaml
 
-from ..util import nested_get
 
 class RefResolver(object):
     def resolve(self, _resolver, scope, ref):

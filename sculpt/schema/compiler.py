@@ -31,11 +31,11 @@ class Compiler(object):
         return [self.load_operation(op) for op in rules]
 
     def load_operation(self, op_spec):
-        op = op_spec["op"]
+        operation = op_spec["op"]
         try:
-            cls = self.actions[op]
+            cls = self.actions[operation]
         except KeyError:
-            raise Exception("unknown operation: {}".format(op))
+            raise Exception("unknown operation: {}".format(operation))
         return cls.compile(self, op_spec)
 
     def load_field(self, field_spec):

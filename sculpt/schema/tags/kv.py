@@ -35,13 +35,13 @@ class KVResolver(object):
     def resolve_keys(self, obj, node):
         try:
             return list(obj.keys())
-        except Exception as exc:
+        except Exception as _:
             raise BadKeys("can not get keys", obj, lineno=node.__lineno__)
 
     def resolve_values(self, obj, node):
         try:
             return list(obj.values())
-        except Exception as exc:
+        except Exception as _:
             raise BadKeys("can not get values", obj, lineno=node.__lineno__)
 
 
@@ -60,7 +60,7 @@ class Keys(NestedNode):
     @classmethod
     def to_yaml(cls, dumper, data):
         return dumper.represent_scalar(cls.yaml_tag, data.obj)
-    
+
     def resolve(self, _resolver, _scope):
         return self.resolver.resolve_keys(self.obj, self)
 
