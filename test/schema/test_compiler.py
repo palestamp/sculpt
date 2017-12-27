@@ -30,7 +30,10 @@ class TestCompiler(unittest.TestCase):
         context = Context({
             "region": 1,
             "category": 12234,
-            "area": 2
+            "area": 2,
+            "12000_key" : 12000,
+            "1000_key" : 1000,
+            "default_key": "default"
         })
 
         executor.run(context)
@@ -39,7 +42,8 @@ class TestCompiler(unittest.TestCase):
             'category': 12234,
             'region': 1,
             'area': 2,
-            'parent_category_final': 12000
+            'parent_category_final': 12000,
+            '12000_key': 12000,
         }
 
         self.assertDictEqual(expected_output, context.stores["output"])
