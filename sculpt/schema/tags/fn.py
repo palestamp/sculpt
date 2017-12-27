@@ -1,8 +1,7 @@
 import yaml
 
-
 from .delegate import Delegate
-
+from sculpt.compat import isstr
 
 class FnResolver(object):
     def resolve(self, _resolver, scope, ref, defs):
@@ -33,7 +32,7 @@ class FnResolver(object):
 
     @staticmethod
     def variable(s):
-        if not isinstance(s, str):
+        if not isstr(s):
             return False, ""
 
         if s and s[0] == '$':
