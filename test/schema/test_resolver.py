@@ -1,17 +1,15 @@
 import unittest
 import os
-from pprint import pprint
 
 from sculpt.schema import Resolver, Loader
-from sculpt.schema.compiler import Compiler
 
 
 BASE_DIR = os.path.dirname(__file__)
 CASES_DIR = os.path.join(BASE_DIR, "cases")
 
 
-def assert_items_equal(tc, l1, l2):
-    tc.assertListEqual(sorted(l1), sorted(l2))
+def assert_items_equal(test_case, list_1, list_2):
+    test_case.assertListEqual(sorted(list_1), sorted(list_2))
 
 
 class TestResolver(unittest.TestCase):
@@ -146,35 +144,3 @@ class TestResolver(unittest.TestCase):
             }
         }]
         self.assertEqual(expect, out.rules.data)
-
-    def test_compiler(self):
-        sample_base = os.path.join(CASES_DIR, "compiler")
-        loader = Loader(sample_base)
-        data = loader.load_file("parent.yml")
-
-        irefs = {
-            "get_parent_category": get_parent_category
-        }
-        resolver = Resolver(loader, irefs=irefs)
-
-        out = resolver.resolve(data)
-        compiler = Compiler()
-
-        from sculpt.core import Executor, Context
-        schema = compiler.compile(out.rules.data)
-        executor = Executor(schema)
-
-        context = Context({
-            "region": 1,
-            "category": 12234,
-            "area": 2
-        })
-
-        executor.run(context)
-
-        print(context.__dict__)
-
-
-def get_parent_category(value):
-    int_val = int(value)
-    return int_val // 1000 * 1000
