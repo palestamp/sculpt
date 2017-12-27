@@ -54,7 +54,6 @@ class TestResolver(unittest.TestCase):
         expect = {
             'key_0': 1,
             'key_1': 2,
-            'key_2': None,
             'iref_0': 123,
         }
         self.assertDictEqual(expect, out.rules.data)

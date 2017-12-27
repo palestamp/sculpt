@@ -8,5 +8,5 @@ variables:
 rules:
   - op: copy
     left: {type: input, name: !ref names.price}
-    right: {type: output, name: !ref names.iprice}
+    right: {type: output, name: null}
     wigth: !ref common.weight.high
