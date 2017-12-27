@@ -1,7 +1,4 @@
 
-
-
-
 try:
     basestring  # pylint:disable=undefined-variable
     def isstr(s):

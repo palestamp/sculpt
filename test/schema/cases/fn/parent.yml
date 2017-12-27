@@ -7,14 +7,14 @@ variables:
 
 functions:
   copy-in-out:
-    define: ['name', 'values']
+    define: ['name']
     rules:
     - op: copy
       left: {type: input, name: $name}
       right: {type: output, name: $name}
 
 rules:
-  - !fn {ref: copy-in-out, defs: {name: region, values: !values {map: !ref region}}}
+  - !fn {ref: copy-in-out, defs: {name: region}}
   - op: copy
     left: {type: input, name: name}
     right: {type: output, name: name}
