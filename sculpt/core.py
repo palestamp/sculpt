@@ -266,6 +266,14 @@ class Delete(object):
     def run(self, context):
         self.field.delete(context)
 
+    @classmethod
+    def compile(cls, compiler, dct):
+        field = compiler.load_field(dct["field"])
+        return cls(field=field)
+
+    def __repr__(self):
+        return "Delete({})".format(self.field)
+
 
 class Each(object):
     def __init__(self, left, right, actions):
