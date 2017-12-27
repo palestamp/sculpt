@@ -361,7 +361,6 @@ class Switch(object):
             if not field.has(ctx):
                 return [], []
             keys.append(field.get(ctx))
-
         node = nested_get(self.tree, keys)
         if node:
             return keys, node["actions"]
@@ -396,6 +395,11 @@ class Switch(object):
             matches = case_spec["case"]
             rules = [compiler.load_operation(co) for co in case_spec["rules"]]
             switch.case(tuple(matches), rules)
+
+        default = dct.get("default")
+        if default:
+            rules = [compiler.load_operation(co) for co in default]
+            switch.default(rules)
         return switch
 
 
