@@ -255,8 +255,8 @@ class Combine(object):
         return cls(*ops)
 
     def __repr__(self):
-        rs = ", ".join([str(op) for op in self.actions])
-        return "Combine({})".format(rs)
+        actions = ", ".join([str(op) for op in self.actions])
+        return "Combine({})".format(actions)
 
 
 class Delete(object):
@@ -398,6 +398,7 @@ class Switch(object):
             switch.case(tuple(matches), rules)
         return switch
 
+
 class Validate(object):
     def __init__(self, field, validator):
         self.field = field
@@ -414,6 +415,7 @@ class Validate(object):
         field = compiler.load_field(dct["field"])
         validator = compiler.load_validator(dct["validator"])
         return cls(field=field, validator=validator)
+
 
 class Executor(object):
     def __init__(self, actions):
