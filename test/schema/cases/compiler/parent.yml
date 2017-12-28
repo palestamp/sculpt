@@ -1,0 +1,59 @@
+id: parent
+
+variables:
+  areas:
+    minsk: 1
+    vitebsk: 2
+
+functions:
+  copy-in-set:
+    define: ['name', 'values']
+    rules:
+    - op: copy
+      left: {type: input, key: $name}
+      right: {type: output, key: $name}
+    - op: validate
+      field: {type: output, key: $name}
+      validator:
+        type: InSet
+        args:
+          values: $values
+
+rules:
+- op: copy
+  left: {type: input, key: category}
+  right: {type: output, key: category}
+- op: copy
+  left: {type: input, key: category}
+  right: {type: output, key: parent_category}
+- op: apply
+  field: {type: output, key: parent_category}
+  func: !iref get_parent_category
+- op: combine
+  ops:
+  - op: copy
+    left: {type: input, key: region}
+    right: {type: output, key: region}
+  - !fn {ref: copy-in-set, defs: {name: area, values: !values {map: !ref areas}}}
+- op: copy
+  left: {type: output, key: parent_category}
+  right: {type: output, key: parent_category_final}
+- op: delete
+  field: {type: output, key: parent_category}
+- op: switch
+  fields: [{type: output, key: parent_category_final}]
+  cases:
+  - case: [1000]
+    rules:
+    - op: copy
+      left: {type: input, key: '1000_key'}
+      right: {type: output, key: '1000_key'}
+  - case: [12000]
+    rules:
+    - op: copy
+      left: {type: input, key: '12000_key'}
+      right: {type: output, key: '12000_key'}
+  default:
+  - op: copy
+    left: {type: input, key: 'default_key'}
+    right: {type: output, key: 'default_key'}

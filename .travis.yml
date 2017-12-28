@@ -5,6 +5,7 @@ python:
   - "3.6"
 
 install:
+  - pip install -r ./requirements/requirements.txt >/dev/null
   - pip install -r ./requirements/requirements_ci.txt >/dev/null
 
 script:

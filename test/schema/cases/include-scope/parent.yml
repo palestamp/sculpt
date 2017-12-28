@@ -1,0 +1,18 @@
+id: parent
+
+variables:
+  names:
+    price: parent-price
+    iprice: parent-iprice
+  common: !include 'file://common-params.yml'
+
+rules:
+  - op: copy
+    left: {name: !ref names.price, type: input}
+    right: {name: !ref names.iprice, type: output}
+  - op: combine
+    rules: !include-rules 'file://child.yml'
+  - op: copy
+    wigth: !ref common.weight.low
+
+

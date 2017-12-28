@@ -7,6 +7,8 @@ except ImportError:
     # Python 2
     from itertools import izip_longest as zip_longest
 
+from .validation import ValidationError
+
 
 class Storage(object):
     section = None
@@ -25,6 +27,9 @@ class Storage(object):
             return False
         return self.section == other.section and self.label == other.label
 
+    @classmethod
+    def compile(cls, _compiler, dct):
+        return cls(label=dct["key"])
 
 class Input(Storage):
     section = "input"
@@ -40,6 +45,9 @@ class Input(Storage):
 
     def set(self, _context, _value):  # pylint: disable=no-self-use
         raise ValueError("set operation not allowed on Input")
+
+    def __repr__(self):
+        return "Input({})".format(self.label)
 
 
 class Output(Storage):
@@ -57,6 +65,9 @@ class Output(Storage):
     def set(self, context, value):
         nested_set(context.cursors[self.section],
                    split_label(self.label), value)
+
+    def __repr__(self):
+        return "Output({})".format(self.label)
 
 
 class Virtual(Storage):
@@ -80,6 +91,9 @@ class VirtualVar(Virtual):
         # virtual vars have plain namespace, so we will just
         # hit storage
         context.stores[self.section][self.label] = value
+
+    def __repr__(self):
+        return "VirtualVar({})".format(self.label)
 
 
 class VirtualList(Virtual):
@@ -182,6 +196,7 @@ class Copy(object):
         # static check for Input assignment
         if isinstance(self.right, Input):
             # just trigger Input.set which should raise
+            # XXX: strange decision...
             self.right.set(None, None)
 
     def run(self, context):
@@ -193,6 +208,38 @@ class Copy(object):
 
         self.right.set(context, value)
 
+    @classmethod
+    def compile(cls, compiler, dct):
+        left = compiler.load_field(dct["left"])
+        right = compiler.load_field(dct["right"])
+        return cls(left=left, right=right)
+
+    def __repr__(self):
+        return "Copy({}, {})".format(self.left, self.right)
+
+
+class Apply(object):
+    def __init__(self, field, function):
+        self.field = field
+        self.function = function
+
+    def run(self, context):
+        value = self.field.get(context)
+        self.field.set(context, self.function(value))
+
+    @classmethod
+    def compile(cls, compiler, dct):
+        field = compiler.load_field(dct["field"])
+        func = dct["func"]
+        return cls(field=field, function=func)
+
+    def __repr__(self):
+        try:
+            function_name = self.function.__name__
+        except AttributeError:
+            function_name = "function"
+        return "Apply({}, {})".format(self.field, function_name)
+
 
 class Combine(object):
     def __init__(self, *actions):
@@ -201,6 +248,16 @@ class Combine(object):
     def run(self, _context):
         return self.actions
 
+    @classmethod
+    def compile(cls, compiler, dct):
+        ops = dct["ops"]
+        ops = [compiler.load_operation(op) for op in ops]
+        return cls(*ops)
+
+    def __repr__(self):
+        actions = ", ".join([str(op) for op in self.actions])
+        return "Combine({})".format(actions)
+
 
 class Delete(object):
     def __init__(self, field):
@@ -208,6 +265,14 @@ class Delete(object):
 
     def run(self, context):
         self.field.delete(context)
+
+    @classmethod
+    def compile(cls, compiler, dct):
+        field = compiler.load_field(dct["field"])
+        return cls(field=field)
+
+    def __repr__(self):
+        return "Delete({})".format(self.field)
 
 
 class Each(object):
@@ -289,18 +354,21 @@ class Switch(object):
         self.default_actions = actions
         return self
 
-    def run(self, ctx):
+    def _run(self, ctx):
         keys = []
         for field in self.fields:
             # case can not match abscent label
             if not field.has(ctx):
-                return []
+                return [], []
             keys.append(field.get(ctx))
-
         node = nested_get(self.tree, keys)
         if node:
-            return node["actions"]
-        return []
+            return keys, node["actions"]
+        return [], []
+
+    def run(self, ctx):
+        _, actions = self._run(ctx)
+        return actions
 
     def merge(self, other):
         all_eq = all(a == b for a, b in zip_longest(
@@ -315,6 +383,42 @@ class Switch(object):
             self.case(values, actions)
 
         return self
+
+    @classmethod
+    def compile(cls, compiler, dct):
+        fields_spec = dct["fields"]
+        fields = [compiler.load_field(field) for field in fields_spec]
+
+        switch = cls(*fields)
+        cases_spec = dct["cases"]
+        for case_spec in cases_spec:
+            matches = case_spec["case"]
+            rules = [compiler.load_operation(co) for co in case_spec["rules"]]
+            switch.case(tuple(matches), rules)
+
+        default = dct.get("default")
+        if default:
+            rules = [compiler.load_operation(co) for co in default]
+            switch.default(rules)
+        return switch
+
+
+class Validate(object):
+    def __init__(self, field, validator):
+        self.field = field
+        self.validator = validator
+
+    def run(self, context):
+        try:
+            self.validator._validate(context, self.field)  # pylint: disable=protected-access
+        except ValidationError as exc:
+            context.errors.append(exc)
+
+    @classmethod
+    def compile(cls, compiler, dct):
+        field = compiler.load_field(dct["field"])
+        validator = compiler.load_validator(dct["validator"])
+        return cls(field=field, validator=validator)
 
 
 class Executor(object):

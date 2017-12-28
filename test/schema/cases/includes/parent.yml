@@ -1,0 +1,5 @@
+id: includes-parent
+
+variables:
+  child: !include 'file://child.yml'
+  child_vars: !include 'file://child.yml#variables'
