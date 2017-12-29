@@ -57,3 +57,6 @@ rules:
   - op: copy
     left: {type: input, key: 'default_key'}
     right: {type: output, key: 'default_key'}
+  - op: validate
+    field: {type: input, key: 'default_key'}
+    validator: NotEmpty

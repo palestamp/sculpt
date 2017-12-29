@@ -1,4 +1,4 @@
-
+from sculpt.compat import isstr
 from sculpt.core import (
     Copy, Switch, Input, Output,
     VirtualVar, Combine, Validate, Apply, Delete
@@ -44,6 +44,10 @@ class Compiler(object):
         return cls.compile(self, field_spec)
 
     def load_validator(self, validator_spec):
+        if isstr(validator_spec):
+            cls = self.validators[validator_spec]
+            return cls()
+
         validator_type = validator_spec["type"]
         parameters = validator_spec.get("args", {})
         cls = self.validators[validator_type]
