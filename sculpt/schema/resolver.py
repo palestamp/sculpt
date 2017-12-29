@@ -2,7 +2,7 @@ import os
 
 from .tags import Delegate, Include, Ref, IRef, Keys, Values, IncludeRules, Fn
 from .tags import SCULPT_TAGS
-from .resolvers import FnResolver
+from .resolvers import FnResolver, IncludeResolver, IncludeRulesResolver
 from .yml import get_loader
 from .util import nested_access
 
@@ -96,6 +96,8 @@ class Resolver(object):
     def _register_tags(self, tag_resolvers):
         default_registry = {
             Fn.yaml_tag: FnResolver(),
+            Include.yaml_tag: IncludeResolver(),
+            IncludeRules.yaml_tag: IncludeRulesResolver(),
         }
 
         default_registry.update(tag_resolvers)
