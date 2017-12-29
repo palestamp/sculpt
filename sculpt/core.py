@@ -31,6 +31,7 @@ class Storage(object):
     def compile(cls, _compiler, dct):
         return cls(label=dct["key"])
 
+
 class Input(Storage):
     section = "input"
 
@@ -218,6 +219,14 @@ class Copy(object):
         return "Copy({}, {})".format(self.left, self.right)
 
 
+class ApplyError(Exception):
+    def __init__(self, message, field, function, orig_exc):
+        super(ApplyError, self).__init__(message)
+        self.field = field
+        self.function = function
+        self.orig_exc = orig_exc
+
+
 class Apply(object):
     def __init__(self, field, function):
         self.field = field
@@ -225,7 +234,13 @@ class Apply(object):
 
     def run(self, context):
         value = self.field.get(context)
-        self.field.set(context, self.function(value))
+        try:
+            value = self.function(value)
+        except Exception as e:
+            raise ApplyError("apply error in {}".format(self.field.label),
+                             self.field, self.function, e)
+
+        self.field.set(context, value)
 
     @classmethod
     def compile(cls, compiler, dct):
