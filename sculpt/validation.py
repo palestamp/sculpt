@@ -31,13 +31,17 @@ class NotEmptyValidator(BaseValidator):
 
 
 class InSetValidator(BaseValidator):
-    def __init__(self, values, **error_kwargs):
-        self.error_kwargs = error_kwargs
+    def __init__(self, values=None, allow_none=False, **error_kwargs):
         self.values = set(values)
+        self.allow_none = allow_none
+        self.error_kwargs = error_kwargs
 
     def validate(self, context, field):
         exists = field.has(context)
         value = field.get(context)
+
+        if not exists and self.allow_none:
+            return
 
         error_kwargs = {
             "label": field.label,
