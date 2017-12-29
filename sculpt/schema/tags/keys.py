@@ -1,7 +1,6 @@
 import yaml
 import yaml.nodes
 
-from .ref import Ref, IRef
 from .exceptions import TagError
 from .tag import NestedTag
 
@@ -19,7 +18,7 @@ class KVViewTag(NestedTag):
         mapping = loader.construct_mapping(node, deep=True)
 
         dereferenced = mapping.get('map')
-        if not isinstance(dereferenced, (Ref, IRef, dict)):
+        if not dereferenced:
             raise cls.exc_type("expected 'map' key inside",
                                node, lineno=node.__lineno__)
 

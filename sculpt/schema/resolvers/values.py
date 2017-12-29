@@ -1,6 +1,6 @@
 
 class ValuesResolver(object):
-    def resolve(self, _resolver, tag):
+    def resolve(self, _resolver, _scope, tag):
         try:
             return list(tag.obj.values())
         except Exception as _:

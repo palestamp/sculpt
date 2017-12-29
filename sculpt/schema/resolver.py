@@ -1,8 +1,10 @@
 import os
 
-from .tags import Delegate, Include, Ref, IRef, Keys, Values, IncludeRules, Fn
+from .tags import (NestedTag, Include, Ref, IRef,
+                   Keys, Values, IncludeRules, Fn)
 from .tags import SCULPT_TAGS
-from .resolvers import FnResolver, IncludeResolver, IncludeRulesResolver
+from .resolvers import (FnResolver, IncludeResolver, IncludeRulesResolver,
+                        KeysResolver, ValuesResolver, RefResolver, IRefResolver)
 from .yml import get_loader
 from .util import nested_access
 
@@ -98,6 +100,10 @@ class Resolver(object):
             Fn.yaml_tag: FnResolver(),
             Include.yaml_tag: IncludeResolver(),
             IncludeRules.yaml_tag: IncludeRulesResolver(),
+            Keys.yaml_tag: KeysResolver(),
+            Values.yaml_tag: ValuesResolver(),
+            Ref.yaml_tag: RefResolver(),
+            IRef.yaml_tag: IRefResolver(),
         }
 
         default_registry.update(tag_resolvers)
@@ -120,7 +126,7 @@ class Resolver(object):
         return section.resolve(self, scope)
 
     def resolve_tag(self, scope, tag):
-        resolver = self._tag_registry[tag]
+        resolver = self._tag_registry[tag.yaml_tag]
         return resolver.resolve(self, scope, tag)
 
     def resolve_dict(self, data, scope=None, allowed_tags=None, section_name=None):
@@ -129,7 +135,7 @@ class Resolver(object):
                 return {k: _recur(v, func) for k, v in node.items()}
             elif isinstance(node, list):
                 return [_recur(v, func) for v in node]
-            elif isinstance(node, Delegate):
+            elif isinstance(node, NestedTag):
                 node = node.delegate(func, scope)
             return func(node, scope)
 
