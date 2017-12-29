@@ -3,10 +3,9 @@ import yaml.nodes
 
 from .ref import Ref, IRef
 from .exceptions import TagError
-from .delegate import Delegate
+from .tag import NestedTag
 
-
-class NestedNode(yaml.YAMLObject, Delegate):
+class KVViewTag(NestedTag):
     obj = None
     exc_type = Exception
 
@@ -24,6 +23,10 @@ class NestedNode(yaml.YAMLObject, Delegate):
                                node, lineno=node.__lineno__)
 
         return cls(dereferenced, lineno=node.__lineno__)
+
+    def delegate(self, func, scope):
+        self.obj = func(self.obj, scope)
+        return self
 
 
 class BadKeys(TagError):
@@ -45,7 +48,7 @@ class KVResolver(object):
             raise BadKeys("can not get values", obj, lineno=node.__lineno__)
 
 
-class Keys(NestedNode):
+class Keys(KVViewTag):
     yaml_tag = u'!keys'
     exc_type = BadKeys
     resolver = KVResolver()
@@ -71,7 +74,7 @@ class BadValues(TagError):
             self.args[0], self.args[1], self.lineno)
 
 
-class Values(NestedNode):
+class Values(KVViewTag):
     yaml_tag = u'!values'
     exc_type = BadValues
     resolver = KVResolver()

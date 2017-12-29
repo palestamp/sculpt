@@ -2,6 +2,7 @@ import os
 
 from .tags import Delegate, Include, Ref, IRef, Keys, Values, IncludeRules, Fn
 from .tags import SCULPT_TAGS
+from .resolvers import FnResolver
 from .yml import get_loader
 from .util import nested_access
 
@@ -84,9 +85,21 @@ class Scope(object):
 
 
 class Resolver(object):
-    def __init__(self, loader, irefs=None):
+    def __init__(self, loader, irefs=None, tag_resolvers=None):
         self.loader = loader
+
         self.irefs = irefs or {}
+
+        tag_resolvers = tag_resolvers or {}
+        self._tag_registry = self._register_tags(tag_resolvers)
+
+    def _register_tags(self, tag_resolvers):
+        default_registry = {
+            Fn.yaml_tag: FnResolver(),
+        }
+
+        default_registry.update(tag_resolvers)
+        return default_registry
 
     def lookup_iref(self, ref):
         return nested_access(self.irefs, ref.split("."))
@@ -100,6 +113,13 @@ class Resolver(object):
 
     def resolve_scope(self, scope):
         return scope.resolve(self)
+
+    def resolve_section(self, section, scope=None):
+        return section.resolve(self, scope)
+
+    def resolve_tag(self, scope, tag):
+        resolver = self._tag_registry[tag]
+        return resolver.resolve(self, scope, tag)
 
     def resolve_dict(self, data, scope=None, allowed_tags=None, section_name=None):
         def _recur(node, func):
@@ -123,9 +143,6 @@ class Resolver(object):
             Fn, allowed_tags, section_name))
         return data
 
-    def resolve_section(self, section, scope=None):
-        return section.resolve(self, scope)
-
     def _filter_nodes(self, node_clss, allowed_tags=None, section_name=None):
         forbidden = cls_diff(SCULPT_TAGS, allowed_tags)
 
@@ -134,7 +151,7 @@ class Resolver(object):
                 raise Exception("tag {} not allowed in '{}' section".format(
                     node.yaml_tag, section_name))
             if isinstance(node, node_clss):
-                return node.resolve(self, scope)
+                return self.resolve_tag(scope, node)
             return node
 
         return _filter
