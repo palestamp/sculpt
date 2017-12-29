@@ -7,7 +7,6 @@ from .util import InfoDict
 
 def register_tag(tag_cls):
     yaml.SafeLoader.add_constructor(tag_cls.yaml_tag, tag_cls.from_yaml)
-    yaml.SafeDumper.add_multi_representer(tag_cls, tag_cls.to_yaml)
 
 
 def composer_with_lineno(loader):
