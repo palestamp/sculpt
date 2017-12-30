@@ -6,26 +6,39 @@ from sculpt.core import (
 
 from sculpt.validation import InSetValidator, NotEmptyValidator
 
+
+DEFAULT_FIELDS = {
+    "input": Input,
+    "output": Output,
+    "virtual_var": VirtualVar,
+}
+
+
+DEFAULT_ACTIONS = {
+    "validate": Validate,
+    "switch": Switch,
+    "copy": Copy,
+    "combine": Combine,
+    "apply": Apply,
+    "delete": Delete,
+}
+
+
+DEFAULT_VALIDATORS = {
+    "InSet": InSetValidator,
+    "NotEmpty": NotEmptyValidator
+}
+
+
 class Compiler(object):
-    fields = {
-        "input": Input,
-        "output": Output,
-        "virtual_var": VirtualVar,
-    }
+    def __init__(self, fields=None, actions=None, validators=None):
+        self.actions = DEFAULT_ACTIONS.copy()
+        self.fields = DEFAULT_FIELDS.copy()
+        self.validators = DEFAULT_VALIDATORS.copy()
 
-    actions = {
-        "validate": Validate,
-        "switch": Switch,
-        "copy": Copy,
-        "combine": Combine,
-        "apply": Apply,
-        "delete": Delete,
-    }
-
-    validators = {
-        "InSet": InSetValidator,
-        "NotEmpty": NotEmptyValidator
-    }
+        self.actions.update(actions or {})
+        self.fields.update(fields or {})
+        self.validators.update(validators or {})
 
     def compile(self, rules):
         return [self.load_operation(op) for op in rules]
