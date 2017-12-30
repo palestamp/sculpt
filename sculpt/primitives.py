@@ -1,4 +1,6 @@
-from sculpt.core import Each, Copy, VirtualList, Delete, run_actions
+from sculpt.actions import Each, Copy, Delete
+from sculpt.fields import VirtualList
+from sculpt.core import run_actions
 
 
 class FieldSelect(object):

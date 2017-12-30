@@ -1,7 +1,9 @@
 from __future__ import absolute_import
 import unittest
 
-from sculpt.core import *
+from sculpt.core import Context, Executor
+from sculpt.actions import Copy, Each, With, Validate, Combine, Delete, Switch
+from sculpt.fields import Input, Output, VirtualVar, VirtualList, Virtual
 
 
 class TestCopy(unittest.TestCase):

@@ -1,7 +1,8 @@
 import unittest
 
 from sculpt.primitives import FieldSelect
-from sculpt.core import Executor, Context, Input, Output
+from sculpt.core import Executor, Context
+from sculpt.fields import Input, Output
 
 
 

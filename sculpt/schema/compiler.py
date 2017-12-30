@@ -1,9 +1,6 @@
 from sculpt.compat import isstr
-from sculpt.core import (
-    Copy, Switch, Input, Output,
-    VirtualVar, Combine, Validate, Apply, Delete
-)
-
+from sculpt.fields import Input, Output, VirtualVar
+from sculpt.actions import Copy, Switch, Combine, Validate, Apply, Delete
 from sculpt.validation import InSetValidator, NotEmptyValidator
 
 
