@@ -2,9 +2,15 @@ from .fields import Input
 from .core import run_actions
 from .util import nested_set, nested_get, zip_longest
 from .validation import ValidationError
+from .element import Element
+
+class Action(Element):
+    pass
 
 
-class Copy(object):
+class Copy(Action):
+    __el_name__ = "copy"
+
     def __init__(self, left, right):
         self.left = left
         self.right = right
@@ -12,7 +18,7 @@ class Copy(object):
         # static check for Input assignment
         if isinstance(self.right, Input):
             # just trigger Input.set which should raise
-            # XXX: strange decision...
+            # XXX: strange decision, better do it as final tree validation visitor
             self.right.set(None, None)
 
     def run(self, context):
@@ -41,8 +47,13 @@ class ApplyError(Exception):
         self.function = function
         self.orig_exc = orig_exc
 
+    def __str__(self):
+        return "{}, {}, {}".format(self.field, self.function, self.orig_exc)
 
-class Apply(object):
+
+class Apply(Action):
+    __el_name__ = "apply"
+
     def __init__(self, field, function):
         self.field = field
         self.function = function
@@ -71,7 +82,9 @@ class Apply(object):
         return "Apply({}, {})".format(self.field, function_name)
 
 
-class Combine(object):
+class Combine(Action):
+    __el_name__ = "combine"
+
     def __init__(self, *actions):
         self.actions = actions
 
@@ -89,7 +102,9 @@ class Combine(object):
         return "Combine({})".format(actions)
 
 
-class Delete(object):
+class Delete(Action):
+    __el_name__ = "delete"
+
     def __init__(self, field):
         self.field = field
 
@@ -105,7 +120,9 @@ class Delete(object):
         return "Delete({})".format(self.field)
 
 
-class Each(object):
+class Each(Action):
+    __el_name__ = "each"
+
     def __init__(self, left, right, actions):
         self.left = left
         self.right = right
@@ -130,7 +147,9 @@ class Each(object):
         self.right.set(context, right_list)
 
 
-class With(object):
+class With(Action):
+    __el_name__ = "with"
+
     def __init__(self, left, right, actions):
         self.left = left
         self.right = right
@@ -160,7 +179,9 @@ class With(object):
         self.right.set(context, right_object)
 
 
-class Switch(object):
+class Switch(Action):
+    __el_name__ = "switch"
+
     def __init__(self, *fields):
         self.fields = fields
         self.tree = {}
@@ -233,7 +254,9 @@ class Switch(object):
         return switch
 
 
-class Validate(object):
+class Validate(Action):
+    __el_name__ = "validate"
+
     def __init__(self, field, validator):
         self.field = field
         self.validator = validator
