@@ -13,7 +13,7 @@ class Fn(NestedTag):
     def from_yaml(cls, loader, node):
         mapping = loader.construct_mapping(node, deep=True)
         ref = mapping["ref"]
-        defs = mapping["defs"]
+        defs = mapping.get("defs", [])
         return cls(ref, defs)
 
     def delegate(self, func, scope):

@@ -15,7 +15,7 @@ class FnResolver(object):
         }
 
     def resolve_defines(self, ref, defines, fnbody):
-        allowed = fnbody.get('define', [])
+        allowed = fnbody.get('defs', [])
 
         def _recur(node, func):
             if isinstance(node, dict):

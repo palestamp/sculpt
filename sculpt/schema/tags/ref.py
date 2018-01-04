@@ -2,12 +2,6 @@
 import yaml
 
 
-class RefResolver(object):
-    def resolve(self, _resolver, scope, ref):
-        found, var = scope.lookup_variable(ref)
-        if not found:
-            raise Exception("ref '{}' not found".format(ref))
-        return var
 
 
 class Ref(yaml.YAMLObject):
