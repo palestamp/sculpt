@@ -1,9 +1,6 @@
-from functools import reduce
-from operator import getitem
-
-
 from .validation import ValidationError
 from .fields import Input, Output, Virtual
+
 
 class Context(object):
     def __init__(self, _input):

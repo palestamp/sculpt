@@ -1,4 +1,4 @@
-from .util import nested_get, nested_has, nested_set, nested_delete, split_label 
+from .util import nested_get, nested_has, nested_set, nested_delete, split_label
 from .element import Element
 
 

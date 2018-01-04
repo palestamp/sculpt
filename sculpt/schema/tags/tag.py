@@ -1,12 +1,6 @@
 import sys
-import abc
 
 import yaml
-
-if sys.version_info >= (3, 4):
-    ABC = abc.ABC
-else:
-    ABC = abc.ABCMeta(str('ABC'), (), {})
 
 
 class Tag(yaml.YAMLObject):
