@@ -2,7 +2,7 @@ import unittest
 
 from sculpt.core import Context, Executor
 from sculpt.fields import Input, Output
-from sculpt.actions import Copy, Validate
+from sculpt.operations import Copy, Validate
 from sculpt.validation import NotEmptyValidator, InSetValidator
 
 

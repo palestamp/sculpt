@@ -1,6 +1,6 @@
 from sculpt.compat import isstr
 from sculpt.fields import Input, Output, VirtualVar
-from sculpt.actions import Copy, Switch, Combine, Validate, Apply, Delete
+from sculpt.operations import Copy, Switch, Combine, Validate, Apply, Delete
 from sculpt.validation import InSetValidator, NotEmptyValidator
 
 
@@ -11,7 +11,7 @@ DEFAULT_FIELDS = {
 }
 
 
-DEFAULT_ACTIONS = {
+DEFAULT_OPERATIONS = {
     "validate": Validate,
     "switch": Switch,
     "copy": Copy,
@@ -28,12 +28,12 @@ DEFAULT_VALIDATORS = {
 
 
 class Compiler(object):
-    def __init__(self, fields=None, actions=None, validators=None):
-        self.actions = DEFAULT_ACTIONS.copy()
+    def __init__(self, fields=None, operations=None, validators=None):
+        self.operations = DEFAULT_OPERATIONS.copy()
         self.fields = DEFAULT_FIELDS.copy()
         self.validators = DEFAULT_VALIDATORS.copy()
 
-        self.actions.update(actions or {})
+        self.operations.update(operations or {})
         self.fields.update(fields or {})
         self.validators.update(validators or {})
 
@@ -43,7 +43,7 @@ class Compiler(object):
     def load_operation(self, op_spec):
         operation = op_spec["op"]
         try:
-            cls = self.actions[operation]
+            cls = self.operations[operation]
         except KeyError:
             raise Exception("unknown operation: {}".format(operation))
         return cls.compile(self, op_spec)

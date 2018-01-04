@@ -23,15 +23,15 @@ class Context(object):
 
 
 class Executor(object):
-    def __init__(self, actions):
-        self.actions = actions
+    def __init__(self, operations):
+        self.operations = operations
 
     def run(self, context):
-        run_actions(context, self.actions)
+        execute_operations(context, self.operations)
 
 
-def run_actions(context, actions):
-    for action in actions:
-        next_actions = action.run(context)
-        if next_actions is not None:
-            run_actions(context, next_actions)
+def execute_operations(context, operations):
+    for operation in operations:
+        next_operations = operation.run(context)
+        if next_operations is not None:
+            execute_operations(context, next_operations)

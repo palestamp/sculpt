@@ -1,14 +1,14 @@
 from .fields import Input
-from .core import run_actions
+from .core import execute_operations
 from .util import nested_set, nested_get, zip_longest
 from .validation import ValidationError
 from .element import Element
 
-class Action(Element):
+class Operation(Element):
     pass
 
 
-class Copy(Action):
+class Copy(Operation):
     __el_name__ = "copy"
 
     def __init__(self, left, right):
@@ -51,7 +51,7 @@ class ApplyError(Exception):
         return "{}, {}, {}".format(self.field, self.function, self.orig_exc)
 
 
-class Apply(Action):
+class Apply(Operation):
     __el_name__ = "apply"
 
     def __init__(self, field, function):
@@ -82,7 +82,7 @@ class Apply(Action):
         return "Apply({}, {})".format(self.field, function_name)
 
 
-class Combine(Action):
+class Combine(Operation):
     __el_name__ = "combine"
 
     def __init__(self, *operations):
@@ -103,7 +103,7 @@ class Combine(Action):
         return "Combine({})".format(operations)
 
 
-class Delete(Action):
+class Delete(Operation):
     __el_name__ = "delete"
 
     def __init__(self, field):
@@ -121,13 +121,13 @@ class Delete(Action):
         return "Delete({})".format(self.field)
 
 
-class Each(Action):
+class Each(Operation):
     __el_name__ = "each"
 
-    def __init__(self, left, right, actions):
+    def __init__(self, left, right, operations):
         self.left = left
         self.right = right
-        self.actions = actions
+        self.operations = operations
 
     def run(self, context):
         # grab producer node
@@ -140,7 +140,7 @@ class Each(Action):
         for item in left_list:
             self.left.set_cursor(context, item)
             self.right.set_cursor(context, {})
-            run_actions(context, self.actions)
+            execute_operations(context, self.operations)
             right_list.append(self.right.get_cursor(context))
 
         self.left.set_cursor(context, old_left_cursor)
@@ -148,13 +148,13 @@ class Each(Action):
         self.right.set(context, right_list)
 
 
-class With(Action):
+class With(Operation):
     __el_name__ = "with"
 
-    def __init__(self, left, right, actions):
+    def __init__(self, left, right, operations):
         self.left = left
         self.right = right
-        self.actions = actions
+        self.operations = operations
 
     def run(self, context):
         # get value by path
@@ -169,8 +169,8 @@ class With(Action):
         self.left.set_cursor(context, left_object)
         self.right.set_cursor(context, right_object)
 
-        # run actions, right_object will be modified
-        run_actions(context, self.actions)
+        # run operations, right_object will be modified
+        execute_operations(context, self.operations)
 
         # restore old cursors
         self.left.set_cursor(context, old_left_cursor)
@@ -180,20 +180,21 @@ class With(Action):
         self.right.set(context, right_object)
 
 
-class Switch(Action):
+class Switch(Operation):
     __el_name__ = "switch"
 
     def __init__(self, *fields):
         self.fields = fields
         self.match_tree = {}
-        self.default_actions = None
+        self.default_operations = None
 
-        self.action_table = {}
+        self.operation_table = {}
+        # used for switch merges
+        self.dispatch_table = []
 
         self._branch_id = 0
-        self._dispatch_table = []
 
-    def case(self, switch_values, actions):
+    def case(self, switch_values, operations):
         if not isinstance(switch_values, (tuple, list)):
             raise TypeError("Switch case should be tuple or list")
 
@@ -203,34 +204,25 @@ class Switch(Action):
         bid = self._branch_id
 
         nested_set(self.match_tree, switch_values, bid)
-        self.action_table[bid] = actions
+        self.operation_table[bid] = operations
 
-        self._dispatch_table.append((switch_values, bid))
+        self.dispatch_table.append((switch_values, bid))
         self._branch_id += 1
 
         return self
 
-    def default(self, actions):
-        self.default_actions = actions
+    def default(self, operations):
+        self.default_operations = operations
         return self
 
-    def _run(self, ctx):
-        keys = []
-        for field in self.fields:
-            # case can not match abscent label
-            if not field.has(ctx):
-                return [], []
-            keys.append(field.get(ctx))
+    def run(self, ctx):
+        keys = [field.get(ctx) for field in self.fields]
 
         bid = nested_get(self.match_tree, keys)
         if bid is not None:
-            return keys, self.action_table[bid]
+            return self.operation_table[bid]
 
-        return [], self.default_actions
-
-    def run(self, ctx):
-        _, actions = self._run(ctx)
-        return actions
+        return self.default_operations
 
     def merge(self, other):
         all_eq = all(a == b for a, b in zip_longest(
@@ -238,12 +230,12 @@ class Switch(Action):
 
         if not all_eq:
             raise ValueError("accessors are different")
-        if other.default_actions is not None:
-            raise ValueError("can not merge default actions")
+        if other.default_operations is not None:
+            raise ValueError("can not merge default operations")
 
-        for values, bid in other._dispatch_table:
-            actions = other.action_table[bid]
-            self.case(values, actions)
+        for values, bid in other.dispatch_table:
+            operations = other.operation_table[bid]
+            self.case(values, operations)
 
         return self
 
@@ -266,7 +258,7 @@ class Switch(Action):
         return switch
 
 
-class Validate(Action):
+class Validate(Operation):
     __el_name__ = "validate"
 
     def __init__(self, field, validator):

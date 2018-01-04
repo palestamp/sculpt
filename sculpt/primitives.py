@@ -1,6 +1,6 @@
-from sculpt.actions import Each, Copy, Delete
+from sculpt.operations import Each, Copy, Delete
 from sculpt.fields import VirtualList
-from sculpt.core import run_actions
+from sculpt.core import execute_operations
 
 
 class FieldSelect(object):
@@ -13,7 +13,7 @@ class FieldSelect(object):
         left_cls = self.left.__class__
         right_cls = self.right.__class__
 
-        run_actions(context, [
+        execute_operations(context, [
             Each(left_cls(self.left.label), right_cls(self.right.label), [
                 Copy(left_cls(self.field_label), VirtualList("_").append()),
             ]),
