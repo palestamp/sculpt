@@ -1,0 +1,6 @@
+copy-in-out:
+  define: ['name']
+  rules:
+  - op: copy
+    left: {type: input, key: $name}
+    right: {type: output, key: $name}
