@@ -184,10 +184,13 @@ class Switch(Action):
 
     def __init__(self, *fields):
         self.fields = fields
-        self.tree = {}
+        self.match_tree = {}
         self.default_actions = None
 
-        self.dispatch_table = []
+        self.action_table = {}
+
+        self._branch_id = 0
+        self._dispatch_table = []
 
     def case(self, switch_values, actions):
         if not isinstance(switch_values, (tuple, list)):
@@ -196,8 +199,13 @@ class Switch(Action):
         if len(switch_values) != len(self.fields):
             raise TypeError("Switch case length mismatch")
 
-        nested_set(self.tree, switch_values, {"actions": actions})
-        self.dispatch_table.append((switch_values, actions))
+        bid = self._branch_id
+
+        nested_set(self.match_tree, switch_values, bid)
+        self.action_table[bid] = actions
+
+        self._dispatch_table.append((switch_values, bid))
+        self._branch_id += 1
 
         return self
 
@@ -212,10 +220,12 @@ class Switch(Action):
             if not field.has(ctx):
                 return [], []
             keys.append(field.get(ctx))
-        node = nested_get(self.tree, keys)
-        if node:
-            return keys, node["actions"]
-        return [], []
+
+        bid = nested_get(self.match_tree, keys)
+        if bid is not None:
+            return keys, self.action_table[bid]
+
+        return [], self.default_actions
 
     def run(self, ctx):
         _, actions = self._run(ctx)
@@ -230,7 +240,8 @@ class Switch(Action):
         if other.default_actions is not None:
             raise ValueError("can not merge default actions")
 
-        for values, actions in other.dispatch_table:
+        for values, bid in other._dispatch_table:
+            actions = other.action_table[bid]
             self.case(values, actions)
 
         return self
