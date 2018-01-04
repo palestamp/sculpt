@@ -1,4 +1,6 @@
 import os
+from operator import methodcaller
+
 
 from .tags import (NestedTag, Include, Ref, IRef,
                    Keys, Values, IncludeRules, Fn)
@@ -32,7 +34,32 @@ class Section(dict):
             data=self.data,
             scope=scope,
             allowed_tags=self.allowed_tags,
-            section_name=self.name)
+            section_name=self.name
+        )
+
+        return Section(
+            data=res,
+            allowed_tags=self.allowed_tags,
+            name=self.name
+        )
+
+    @classmethod
+    def factory(cls, data, **kwargs):
+        allow_ordered_definition = kwargs.pop("allow_ordered_definition", False)
+        if allow_ordered_definition and isinstance(data, list):
+            return NamespaceSection(data, **kwargs)
+
+        return Section(data, **kwargs)
+
+
+class NamespaceSection(Section):
+    def resolve(self, resolver, scope=None):
+        res = resolver.resolve_namespace_list(
+            data=self.data,
+            scope=scope,
+            allowed_tags=self.allowed_tags,
+            section_name=self.name
+        )
 
         return Section(
             data=res,
@@ -48,24 +75,25 @@ class Scope(object):
     rules_key = "rules"
 
     variables_allowed_tags = (Include,)
-    functions_allowed_tags = (Include, Ref, IRef, Keys, Values)
+    functions_allowed_tags = (Include, Ref, IRef, Keys, Values, Fn)
     rules_allowed_tags = (Include, Ref, IRef, Keys, Values, IncludeRules, Fn)
 
     def __init__(self, data):
         self.ident = data[self.id_key]
-        self.variables = Section(
+        self.variables = Section.factory(
             data=data.get(self.variables_key, {}),
             name=self.variables_key,
             allowed_tags=self.variables_allowed_tags,
         )
 
-        self.functions = Section(
+        self.functions = Section.factory(
             data=data.get(self.functions_key, {}),
             name=self.functions_key,
             allowed_tags=self.functions_allowed_tags,
+            allow_ordered_definition=True,
         )
 
-        self.rules = Section(
+        self.rules = Section.factory(
             data=data.get(self.rules_key, {}),
             name=self.rules_key,
             allowed_tags=self.rules_allowed_tags
@@ -84,6 +112,30 @@ class Scope(object):
 
     def lookup_function(self, ref):
         return nested_access(self.functions.data, ref.split("."))
+
+
+class ScopeProxy(Scope):
+    def __init__(self, scope=None):
+        super(ScopeProxy, self).__init__({self.id_key: "__fake__"})
+        self._scopes = []
+        self.push(scope)
+
+    def push(self, scope):
+        if scope:
+            self._scopes.append(scope)
+
+    def _chain_lookup(self, method_call):
+        for scope in reversed(self._scopes):
+            found, value = method_call(scope)
+            if found:
+                return found, value
+        return False, None
+
+    def lookup_variable(self, ref):
+        return self._chain_lookup(methodcaller('lookup_variable', ref))
+
+    def lookup_function(self, ref):
+        return self._chain_lookup(methodcaller('lookup_function', ref))
 
 
 class Resolver(object):
@@ -150,6 +202,26 @@ class Resolver(object):
         data = _recur(data, self._filter_nodes(
             Fn, allowed_tags, section_name))
         return data
+
+    def resolve_namespace_list(self, data, scope=None, allowed_tags=None, section_name=None):
+        lookup_proxy = ScopeProxy(scope)
+
+        out = {}
+        for namespace_dict in data:
+            name = namespace_dict["namespace"]
+            content = namespace_dict["items"]
+            data = self.resolve_dict(content, lookup_proxy, allowed_tags, section_name)
+            scoped_data = {name: data}
+
+            tmp_scope = Scope({
+                Scope.id_key: "__fake__",
+                section_name: scoped_data
+            })
+            lookup_proxy.push(tmp_scope)
+
+            out.update(scoped_data)
+
+        return out
 
     def _filter_nodes(self, node_clss, allowed_tags=None, section_name=None):
         forbidden = cls_diff(SCULPT_TAGS, allowed_tags)

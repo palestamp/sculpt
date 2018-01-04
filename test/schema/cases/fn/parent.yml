@@ -6,15 +6,25 @@ variables:
     b: 2
 
 functions:
-  copy-in-out:
-    define: ['name']
-    rules:
-    - op: copy
-      left: {type: input, name: $name}
-      right: {type: output, name: $name}
+  - namespace: generic
+    items: !include 'file://functions.yml'
+
+  - namespace: lc
+    items:
+      region:
+        rules:
+        - !fn {ref: generic.copy-in-out, defs: {name: region}}
+
+      name:
+        rules:
+        - !fn {ref: generic.copy-in-out, defs: {name: name}}
+
+  - namespace: final
+    items:
+      copy-all:
+        rules:
+        - !fn {ref: lc.region}
+        - !fn {ref: lc.name}
 
 rules:
-  - !fn {ref: copy-in-out, defs: {name: region}}
-  - op: copy
-    left: {type: input, name: name}
-    right: {type: output, name: name}
+  - !fn {ref: final.copy-all}

@@ -114,33 +114,33 @@ class TestResolver(unittest.TestCase):
         loader = Loader(sample_base)
         data = loader.load_file("parent.yml")
 
-
         resolver = Resolver(loader)
 
         out = resolver.resolve(data)
 
         expect = [{
-            "op": "combine",
-            "ops": [{
-                "op": "copy",
-                "left": {
-                    "type": "input",
-                    "name": "region"
-                },
-                "right": {
-                    "type": "output",
-                    "name": "region"
-                }
+            'op': 'combine',
+            'ops': [{
+                'op': 'combine',
+                'ops': [{
+                    'op': 'combine',
+                    'ops': [{
+                        'op': 'copy',
+                        'left': {'key': 'region', 'type': 'input'},
+                        'right': {'key': 'region', 'type': 'output'}
+                    }]
+                }]
+            }, {
+                'op': 'combine',
+                'ops': [{
+                    'op': 'combine',
+                    'ops': [{
+                        'op': 'copy',
+                        'left': {'key': 'name', 'type': 'input'},
+                        'right': {'key': 'name', 'type': 'output'}
+                    }]
+                }]
             }]
-        }, {
-            "op": "copy",
-            "left": {
-                "type": "input",
-                "name": "name"
-            },
-            "right": {
-                "type": "output",
-                "name": "name"
-            }
         }]
+
         self.assertEqual(expect, out.rules.data)
