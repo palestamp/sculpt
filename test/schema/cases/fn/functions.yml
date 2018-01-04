@@ -1,5 +1,5 @@
 copy-in-out:
-  define: ['name']
+  defs: ['name']
   rules:
   - op: copy
     left: {type: input, key: $name}
