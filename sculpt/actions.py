@@ -85,11 +85,12 @@ class Apply(Action):
 class Combine(Action):
     __el_name__ = "combine"
 
-    def __init__(self, *actions):
-        self.actions = actions
+    def __init__(self, *operations):
+        self.operations = operations
 
     def run(self, _context):
-        return self.actions
+        # executor knows how to handle list of operations
+        return self.operations
 
     @classmethod
     def compile(cls, compiler, dct):
@@ -98,8 +99,8 @@ class Combine(Action):
         return cls(*ops)
 
     def __repr__(self):
-        actions = ", ".join([str(op) for op in self.actions])
-        return "Combine({})".format(actions)
+        operations = ", ".join([str(op) for op in self.operations])
+        return "Combine({})".format(operations)
 
 
 class Delete(Action):
