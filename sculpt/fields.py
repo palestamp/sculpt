@@ -1,12 +1,11 @@
 from .util import nested_get, nested_has, nested_set, nested_delete, split_label 
+from .element import Element
 
 
-class Storage(object):
+class Storage(Element):
     section = None
-    count = 0
 
     def __init__(self, label):
-        Storage.count += 1
         self.label = label
 
     def get_cursor(self, context):
@@ -26,6 +25,7 @@ class Storage(object):
 
 
 class Input(Storage):
+    __el_name__ = "input"
     section = "input"
 
     def get(self, context):
@@ -45,6 +45,7 @@ class Input(Storage):
 
 
 class Output(Storage):
+    __el_name__ = "output"
     section = "output"
 
     def get(self, context):
@@ -73,6 +74,7 @@ class Virtual(Storage):
 
 
 class VirtualVar(Virtual):
+    __el_name__ = "virtual_var"
     section = "virtual"
 
     def get(self, context):
@@ -91,10 +93,11 @@ class VirtualVar(Virtual):
 
 
 class VirtualList(Virtual):
+    __el_name__ = "virtual_list"
     context_section = "virtual"
 
     def __init__(self, label, _op="set"):
-        self.label = label
+        super(VirtualList, self).__init__(label)
         self._op = _op
         self.cbs = []
 
@@ -163,4 +166,3 @@ class VirtualList(Virtual):
             current = [value]
 
         self._assign_set(context, current)
-
