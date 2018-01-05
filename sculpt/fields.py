@@ -1,12 +1,25 @@
-from .util import nested_get, nested_has, nested_set, nested_delete, split_label
+from .util import (nested_get, nested_has, nested_set, nested_delete, 
+               split_label, classproperty)
 from .element import Element
 
 
 class Storage(Element):
-    section = None
+    __context_section__ = None
+    __eq_attrs__ = ["label"]
 
     def __init__(self, label):
         self.label = label
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+
+        return (self.section == other.section and
+                self.label == other.label)
+
+    @classproperty
+    def section(cls):
+        return cls.__context_section__
 
     def get_cursor(self, context):
         return context.cursors[self.section]
@@ -14,10 +27,6 @@ class Storage(Element):
     def set_cursor(self, context, item):
         context.cursors[self.section] = item
 
-    def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            return False
-        return self.section == other.section and self.label == other.label
 
     @classmethod
     def compile(cls, _compiler, dct):
@@ -25,8 +34,8 @@ class Storage(Element):
 
 
 class Input(Storage):
+    __context_section__ = "input"
     __el_name__ = "input"
-    section = "input"
 
     def get(self, context):
         return nested_get(context.cursors[self.section], split_label(self.label))
@@ -45,8 +54,8 @@ class Input(Storage):
 
 
 class Output(Storage):
+    __context_section__ = "output"
     __el_name__ = "output"
-    section = "output"
 
     def get(self, context):
         return nested_get(context.cursors[self.section], split_label(self.label))
@@ -66,7 +75,7 @@ class Output(Storage):
 
 
 class Virtual(Storage):
-    section = "virtual"
+    __context_section__ = "virtual"
 
     def delete(self, context):
         if self.label in context.stores[self.section]:
@@ -75,7 +84,6 @@ class Virtual(Storage):
 
 class VirtualVar(Virtual):
     __el_name__ = "virtual_var"
-    section = "virtual"
 
     def get(self, context):
         return context.stores[self.section].get(self.label)
@@ -94,7 +102,6 @@ class VirtualVar(Virtual):
 
 class VirtualList(Virtual):
     __el_name__ = "virtual_list"
-    context_section = "virtual"
 
     def __init__(self, label, _op="set"):
         super(VirtualList, self).__init__(label)
