@@ -1,9 +1,20 @@
 from __future__ import absolute_import
 import unittest
 
-from sculpt.core import Context, Executor
+from sculpt.core import Context, Executor, Schema
 from sculpt.operations import Copy, Each, With, Validate, Combine, Delete, Switch
 from sculpt.fields import Input, Output, VirtualVar, VirtualList, Virtual
+from sculpt.ast import EvictNestedCombines
+
+class TestElement(unittest.TestCase):
+    def test_eq(self):
+        a = Copy(Input("a"), Output("b"))
+        b = Copy(Input("a"), Output("b"))
+        c = Copy(Input("v"), Output("b"))
+
+        self.assertEqual(a, b)
+        self.assertNotEqual(a, c)
+        self.assertNotEqual(b, c)
 
 
 class TestCopy(unittest.TestCase):
