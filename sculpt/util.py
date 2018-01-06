@@ -1,12 +1,12 @@
 from operator import getitem
-from functools import reduce
+from functools import reduce # pylint: disable=redefined-builtin
 
 try:
     # Python 3
-    from itertools import zip_longest
+    from itertools import zip_longest #pylint: disable=unused-import
 except ImportError:
     # Python 2
-    from itertools import izip_longest as zip_longest
+    from itertools import izip_longest as zip_longest #pylint: disable=unused-import
 
 
 class classproperty(object):

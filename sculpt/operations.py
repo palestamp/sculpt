@@ -71,7 +71,7 @@ class Apply(Operation):
                              self.field, self.function, e)
 
         self.field.set(context, value)
-    
+
     def accept(self, visitor):
         return visitor.visit_apply(self)
 
@@ -92,14 +92,13 @@ class Apply(Operation):
 class Combine(Operation):
     __el_name__ = "combine"
 
-
     def __init__(self, *operations):
         self.operations = operations
 
     def run(self, _context):
         # executor knows how to handle list of operations
         return self.operations
-    
+
     def accept(self, visitor):
         return visitor.visit_combine(self)
 
@@ -122,7 +121,7 @@ class Delete(Operation):
 
     def run(self, context):
         self.field.delete(context)
-    
+
     def accept(self, visitor):
         return visitor.visit_delete(self)
 
@@ -160,7 +159,7 @@ class Each(Operation):
         self.left.set_cursor(context, old_left_cursor)
         self.right.set_cursor(context, old_right_cursor)
         self.right.set(context, right_list)
-    
+
     def accept(self, visitor):
         return visitor.visit_each(self)
 

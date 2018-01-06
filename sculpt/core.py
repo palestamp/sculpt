@@ -1,4 +1,5 @@
-from .validation import ValidationError
+import collections
+
 from .fields import Input, Output, Virtual
 
 
@@ -36,7 +37,7 @@ class Executor(object):
         self.root = None
         if isinstance(schema, Schema):
             self.root = schema
-        elif isinstance(schema, list):  # XXX: use collections or types
+        elif isinstance(schema, collections.MutableSequence):
             self.root = Schema(schema)
         else:
             raise ValueError(

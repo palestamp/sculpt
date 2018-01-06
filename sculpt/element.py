@@ -12,7 +12,7 @@ class Element(object):
         return NotImplemented
 
     def __ne__(self, other):
-        x = self.__eq__(other)
-        if x is not NotImplemented:
-            return not x
+        equals = self.__eq__(other)
+        if equals is not NotImplemented:
+            return not equals
         return NotImplemented
