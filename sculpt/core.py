@@ -19,12 +19,34 @@ class Context(object):
         self.errors = []
 
 
-class Executor(object):
+class Schema(object):
     def __init__(self, operations):
         self.operations = operations
 
+    def accept(self, visitor):
+        visitor.visit_schema(self)
+
+    def __repr__(self):
+        ops = ", ".join(str(op) for op in self.operations)
+        return "Schema({})".format(ops)
+
+
+class Executor(object):
+    def __init__(self, schema):
+        self.root = None
+        if isinstance(schema, Schema):
+            self.root = schema
+        elif isinstance(schema, list):  # XXX: use collections or types
+            self.root = Schema(schema)
+        else:
+            raise ValueError(
+                "executor accepts list of operations or Schema, got: {}".format(
+                    type(schema))
+            )
+
     def run(self, context):
-        execute_operations(context, self.operations)
+        execute_operations(context, self.root.operations)
+        return context
 
 
 def execute_operations(context, operations):
