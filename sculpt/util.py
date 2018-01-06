@@ -43,7 +43,10 @@ def nested_delete(dct, keys):
     key = keys[-1]
     target = nested_get(dct, parent_path)
     if isinstance(target, dict):
-        del target[key]
+        try:
+            del target[key]
+        except KeyError:
+            pass
 
 
 def nested_set(dct, keys, value):

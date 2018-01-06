@@ -5,6 +5,10 @@ from .util import (nested_get, nested_has, nested_set, nested_delete,
 from .element import Element
 
 
+FLAT = "flat"
+NESTED = "nested"
+
+
 def with_cursor(func):
     @functools.wraps(func)
     def wrapper(self, context, *args, **kwargs):
@@ -16,6 +20,7 @@ def with_cursor(func):
 
 class Storage(Element):
     __context_section__ = None
+    __storage_type__ = None
     __eq_attrs__ = ["section", "label"]
 
     def __init__(self, label):
@@ -38,6 +43,49 @@ class Storage(Element):
     def set_cursor(self, context, item):
         context.cursors[self.section] = item
 
+    @with_cursor
+    def get(self, _context, cursor):
+        storage_type = self.__storage_type__
+        if storage_type == NESTED:
+            return nested_get(cursor, split_label(self.label))
+        elif storage_type == FLAT:
+            return cursor.get(self.label)
+        else:
+            raise ValueError("Unrecognized storage type")
+
+    @with_cursor
+    def has(self, _context, cursor):
+        storage_type = self.__storage_type__
+        if storage_type == NESTED:
+            return nested_has(cursor, split_label(self.label))
+        elif storage_type == FLAT:
+            return self.label in cursor
+        else:
+            raise ValueError("Unrecognized storage type")
+
+    @with_cursor
+    def delete(self, _context, cursor):
+        storage_type = self.__storage_type__
+        if storage_type == NESTED:
+            nested_delete(cursor, split_label(self.label))
+        elif storage_type == FLAT:
+            try:
+                del cursor[self.label]
+            except KeyError:
+                pass
+        else:
+            raise ValueError("Unrecognized storage type")
+
+    @with_cursor
+    def set(self, _context, value, cursor):
+        storage_type = self.__storage_type__
+        if storage_type == NESTED:
+            nested_set(cursor, split_label(self.label), value)
+        elif storage_type == FLAT:
+            cursor[self.label] = value
+        else:
+            raise ValueError("Unrecognized storage type")
+
     @classmethod
     def compile(cls, _compiler, dct):
         return cls(label=dct["key"])
@@ -45,14 +93,7 @@ class Storage(Element):
 
 class Input(Storage):
     __context_section__ = "input"
-
-    @with_cursor
-    def get(self, _context, cursor):
-        return nested_get(cursor, split_label(self.label))
-    
-    @with_cursor
-    def has(self, _context, cursor):
-        return nested_has(cursor, split_label(self.label))
+    __storage_type__ = NESTED
 
     def delete(self, _context):  # pylint: disable=no-self-use
         raise ValueError("delete operation not allowed on Input")
@@ -69,22 +110,7 @@ class Input(Storage):
 
 class Output(Storage):
     __context_section__ = "output"
-
-    @with_cursor
-    def get(self, _context, cursor):
-        return nested_get(cursor, split_label(self.label))
-
-    @with_cursor
-    def has(self, _context, cursor):
-        return nested_has(cursor, split_label(self.label))
-
-    @with_cursor
-    def delete(self, _context, cursor):
-        nested_delete(cursor, split_label(self.label))
-
-    @with_cursor
-    def set(self, _context, value, cursor):
-        nested_set(cursor, split_label(self.label), value)
+    __storage_type__ = NESTED
 
     def accept(self, visitor):
         return visitor.visit_output(self)
@@ -95,6 +121,7 @@ class Output(Storage):
 
 class Virtual(Storage):
     __context_section__ = "virtual"
+    __storage_type__ = FLAT
 
     def delete(self, context):
         if self.label in context.stores[self.section]:
@@ -102,17 +129,6 @@ class Virtual(Storage):
 
 
 class VirtualVar(Virtual):
-    def get(self, context):
-        return context.stores[self.section].get(self.label)
-
-    def has(self, context):
-        return self.label in context.stores[self.section]
-
-    def set(self, context, value):
-        # virtual vars have plain namespace, so we will just
-        # hit storage
-        context.stores[self.section][self.label] = value
-
     def accept(self, visitor):
         return visitor.visit_virtual_var(self)
 
@@ -132,16 +148,9 @@ class VirtualList(Virtual):
             val = callback(val)
         return val
 
-    def has(self, context):
-        return self.label in context.stores[self.section]
-
     def set(self, ctx, val):
-        if self._op == "set":
-            self._assign_set(ctx, val)
-        elif self._op == "append":
-            self._assign_append(ctx, val)
-        elif self._op == "extend":
-            self._assign_extend(ctx, val)
+        method = getattr(self, "_assign_{}".format(self._op))
+        method(ctx, val)
 
     def accept(self, visitor):
         return visitor.visit_virtual_list(self)
