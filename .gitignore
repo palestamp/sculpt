@@ -11,6 +11,7 @@ build
 .tox
 .cache/
 .idea/
+.vscode/
 
 # Coverage reports
 htmlcov
