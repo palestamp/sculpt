@@ -4,7 +4,7 @@ import unittest
 from sculpt.core import Context, Executor, Schema
 from sculpt.operations import Copy, Each, With, Validate, Combine, Delete, Switch
 from sculpt.fields import Input, Output, VirtualVar, VirtualList, Virtual
-from sculpt.ast import EvictNestedCombines
+
 
 class TestElement(unittest.TestCase):
     def test_eq(self):
