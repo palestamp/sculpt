@@ -4,12 +4,13 @@ from .util import nested_set, nested_get, zip_longest
 from .validation import ValidationError
 from .element import Element
 
+
 class Operation(Element):
     pass
 
 
 class Copy(Operation):
-    __el_name__ = "copy"
+    __eq_attrs__ = ["left", "right"]
 
     def __init__(self, left, right):
         self.left = left
@@ -29,6 +30,9 @@ class Copy(Operation):
             return
 
         self.right.set(context, value)
+
+    def accept(self, visitor):
+        return visitor.visit_copy(self)
 
     @classmethod
     def compile(cls, compiler, dct):
@@ -67,6 +71,9 @@ class Apply(Operation):
                              self.field, self.function, e)
 
         self.field.set(context, value)
+    
+    def accept(self, visitor):
+        return visitor.visit_apply(self)
 
     @classmethod
     def compile(cls, compiler, dct):
@@ -85,12 +92,16 @@ class Apply(Operation):
 class Combine(Operation):
     __el_name__ = "combine"
 
+
     def __init__(self, *operations):
         self.operations = operations
 
     def run(self, _context):
         # executor knows how to handle list of operations
         return self.operations
+    
+    def accept(self, visitor):
+        return visitor.visit_combine(self)
 
     @classmethod
     def compile(cls, compiler, dct):
@@ -111,6 +122,9 @@ class Delete(Operation):
 
     def run(self, context):
         self.field.delete(context)
+    
+    def accept(self, visitor):
+        return visitor.visit_delete(self)
 
     @classmethod
     def compile(cls, compiler, dct):
@@ -146,6 +160,9 @@ class Each(Operation):
         self.left.set_cursor(context, old_left_cursor)
         self.right.set_cursor(context, old_right_cursor)
         self.right.set(context, right_list)
+    
+    def accept(self, visitor):
+        return visitor.visit_each(self)
 
 
 class With(Operation):
@@ -179,6 +196,9 @@ class With(Operation):
         # with old right cursor set assign new value
         self.right.set(context, right_object)
 
+    def accept(self, visitor):
+        return visitor.visit_with(self)
+
 
 class Switch(Operation):
     __el_name__ = "switch"
@@ -193,6 +213,18 @@ class Switch(Operation):
         self.dispatch_table = []
 
         self._branch_id = 0
+
+    def run(self, ctx):
+        keys = [field.get(ctx) for field in self.fields]
+
+        bid = nested_get(self.match_tree, keys)
+        if bid is not None:
+            return self.operation_table[bid]
+
+        return self.default_operations
+
+    def accept(self, visitor):
+        return visitor.visit_switch(self)
 
     def case(self, switch_values, operations):
         if not isinstance(switch_values, (tuple, list)):
@@ -214,15 +246,6 @@ class Switch(Operation):
     def default(self, operations):
         self.default_operations = operations
         return self
-
-    def run(self, ctx):
-        keys = [field.get(ctx) for field in self.fields]
-
-        bid = nested_get(self.match_tree, keys)
-        if bid is not None:
-            return self.operation_table[bid]
-
-        return self.default_operations
 
     def merge(self, other):
         all_eq = all(a == b for a, b in zip_longest(
@@ -270,6 +293,9 @@ class Validate(Operation):
             self.validator._validate(context, self.field)  # pylint: disable=protected-access
         except ValidationError as exc:
             context.errors.append(exc)
+
+    def accept(self, visitor):
+        return visitor.visit_validate(self)
 
     @classmethod
     def compile(cls, compiler, dct):

@@ -1,7 +1,8 @@
 from sculpt.compat import isstr
 from sculpt.fields import Input, Output, VirtualVar
-from sculpt.operations import Copy, Switch, Combine, Validate, Apply, Delete
+from sculpt.operations import (Copy, Switch, Combine, Validate, Apply, Delete)
 from sculpt.validation import InSetValidator, NotEmptyValidator
+from sculpt.core import Schema
 
 
 DEFAULT_FIELDS = {
@@ -38,7 +39,7 @@ class Compiler(object):
         self.validators.update(validators or {})
 
     def compile(self, rules):
-        return [self.load_operation(op) for op in rules]
+        return Schema([self.load_operation(op) for op in rules])
 
     def load_operation(self, op_spec):
         operation = op_spec["op"]

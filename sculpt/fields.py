@@ -35,7 +35,6 @@ class Storage(Element):
 
 class Input(Storage):
     __context_section__ = "input"
-    __el_name__ = "input"
 
     def get(self, context):
         return nested_get(context.cursors[self.section], split_label(self.label))
@@ -49,13 +48,15 @@ class Input(Storage):
     def set(self, _context, _value):  # pylint: disable=no-self-use
         raise ValueError("set operation not allowed on Input")
 
+    def accept(self, visitor):
+        return visitor.visit_input(self)
+
     def __repr__(self):
         return "Input({})".format(self.label)
 
 
 class Output(Storage):
     __context_section__ = "output"
-    __el_name__ = "output"
 
     def get(self, context):
         return nested_get(context.cursors[self.section], split_label(self.label))
@@ -70,6 +71,9 @@ class Output(Storage):
         nested_set(context.cursors[self.section],
                    split_label(self.label), value)
 
+    def accept(self, visitor):
+        return visitor.visit_output(self)
+
     def __repr__(self):
         return "Output({})".format(self.label)
 
@@ -83,8 +87,6 @@ class Virtual(Storage):
 
 
 class VirtualVar(Virtual):
-    __el_name__ = "virtual_var"
-
     def get(self, context):
         return context.stores[self.section].get(self.label)
 
@@ -96,13 +98,14 @@ class VirtualVar(Virtual):
         # hit storage
         context.stores[self.section][self.label] = value
 
+    def accept(self, visitor):
+        return visitor.visit_virtual_var(self)
+
     def __repr__(self):
         return "VirtualVar({})".format(self.label)
 
 
 class VirtualList(Virtual):
-    __el_name__ = "virtual_list"
-
     def __init__(self, label, _op="set"):
         super(VirtualList, self).__init__(label)
         self._op = _op
@@ -124,6 +127,9 @@ class VirtualList(Virtual):
             self._assign_append(ctx, val)
         elif self._op == "extend":
             self._assign_extend(ctx, val)
+
+    def accept(self, visitor):
+        return visitor.visit_virtual_list(self)
 
     def append(self):
         return self.__class__(self.label, _op="append")
