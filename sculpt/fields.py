@@ -1,6 +1,17 @@
+import functools
+
 from .util import (nested_get, nested_has, nested_set, nested_delete,
                    split_label, classproperty)
 from .element import Element
+
+
+def with_cursor(func):
+    @functools.wraps(func)
+    def wrapper(self, context, *args, **kwargs):
+        cursors = self.get_cursor(context)
+        kwargs["cursor"] = cursors
+        return func(self, context, *args, **kwargs)
+    return wrapper
 
 
 class Storage(Element):
@@ -35,11 +46,13 @@ class Storage(Element):
 class Input(Storage):
     __context_section__ = "input"
 
-    def get(self, context):
-        return nested_get(context.cursors[self.section], split_label(self.label))
-
-    def has(self, context):
-        return nested_has(context.cursors[self.section], split_label(self.label))
+    @with_cursor
+    def get(self, _context, cursor):
+        return nested_get(cursor, split_label(self.label))
+    
+    @with_cursor
+    def has(self, _context, cursor):
+        return nested_has(cursor, split_label(self.label))
 
     def delete(self, _context):  # pylint: disable=no-self-use
         raise ValueError("delete operation not allowed on Input")
@@ -57,18 +70,21 @@ class Input(Storage):
 class Output(Storage):
     __context_section__ = "output"
 
-    def get(self, context):
-        return nested_get(context.cursors[self.section], split_label(self.label))
+    @with_cursor
+    def get(self, _context, cursor):
+        return nested_get(cursor, split_label(self.label))
 
-    def has(self, context):
-        return nested_has(context.cursors[self.section], split_label(self.label))
+    @with_cursor
+    def has(self, _context, cursor):
+        return nested_has(cursor, split_label(self.label))
 
-    def delete(self, context):
-        nested_delete(context.cursors[self.section], split_label(self.label))
+    @with_cursor
+    def delete(self, _context, cursor):
+        nested_delete(cursor, split_label(self.label))
 
-    def set(self, context, value):
-        nested_set(context.cursors[self.section],
-                   split_label(self.label), value)
+    @with_cursor
+    def set(self, _context, value, cursor):
+        nested_set(cursor, split_label(self.label), value)
 
     def accept(self, visitor):
         return visitor.visit_output(self)
