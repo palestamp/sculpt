@@ -1,11 +1,11 @@
-from .util import (nested_get, nested_has, nested_set, nested_delete, 
-               split_label, classproperty)
+from .util import (nested_get, nested_has, nested_set, nested_delete,
+                   split_label, classproperty)
 from .element import Element
 
 
 class Storage(Element):
     __context_section__ = None
-    __eq_attrs__ = ["label"]
+    __eq_attrs__ = ["section", "label"]
 
     def __init__(self, label):
         self.label = label
@@ -18,7 +18,7 @@ class Storage(Element):
                 self.label == other.label)
 
     @classproperty
-    def section(cls):
+    def section(cls):  # pylint: disable=no-self-argument
         return cls.__context_section__
 
     def get_cursor(self, context):
@@ -26,7 +26,6 @@ class Storage(Element):
 
     def set_cursor(self, context, item):
         context.cursors[self.section] = item
-
 
     @classmethod
     def compile(cls, _compiler, dct):
