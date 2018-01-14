@@ -2,11 +2,11 @@ import os
 from operator import methodcaller
 
 
-from .tags import (NestedTag, Include, Ref, IRef,
+from .tags import (NestedTag, Include, Ref, RefValues, IRef,
                    Keys, Values, IncludeRules, Fn)
 from .tags import SCULPT_TAGS
 from .resolvers import (FnResolver, IncludeResolver, IncludeRulesResolver,
-                        KeysResolver, ValuesResolver, RefResolver, IRefResolver)
+                        KeysResolver, ValuesResolver, RefResolver, RefValuesResolver, IRefResolver)
 from .yml import get_loader
 from .util import nested_access
 
@@ -155,6 +155,7 @@ class Resolver(object):
             Keys.yaml_tag: KeysResolver(),
             Values.yaml_tag: ValuesResolver(),
             Ref.yaml_tag: RefResolver(),
+            RefValues.yaml_tag: RefValuesResolver(),
             IRef.yaml_tag: IRefResolver(),
         }
 

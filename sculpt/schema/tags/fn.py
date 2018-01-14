@@ -5,9 +5,9 @@ from .tag import NestedTag
 class Fn(NestedTag):
     yaml_tag = u'!fn'
 
-    def __init__(self, ref, defs):
+    def __init__(self, ref, defs=None):
         self.ref = ref
-        self.defs = defs
+        self.defs = defs or {}
 
     @classmethod
     def from_yaml(cls, loader, node):

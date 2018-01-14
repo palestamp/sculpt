@@ -16,3 +16,14 @@ class Ref(yaml.YAMLObject):
 
     def __repr__(self):
         return 'Ref({})'.format(self.ref)
+
+
+class RefValues(Ref):
+    yaml_tag = u'!ref-values'
+
+    @classmethod
+    def from_yaml(cls, loader, node):
+        return RefValues(node.value)
+
+    def __repr__(self):
+        return 'RefValues({})'.format(self.ref)
