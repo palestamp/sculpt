@@ -19,6 +19,9 @@ class Context(object):
 
         self.errors = []
 
+    def output(self):
+        return self.stores[Output.section]
+
 
 class Schema(object):
     def __init__(self, operations):
@@ -46,7 +49,11 @@ class Executor(object):
             )
 
     def run(self, context):
-        execute_operations(context, self.root.operations)
+        return self.run_operations(context, self.root.operations)
+
+    @staticmethod
+    def run_operations(context, operations):
+        execute_operations(context, operations)
         return context
 
 
